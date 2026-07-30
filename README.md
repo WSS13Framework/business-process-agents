@@ -1,5 +1,8 @@
 # Autonomous Business-Process Agents
 
+[![CI](https://github.com/WSS13Framework/business-process-agents/actions/workflows/ci.yml/badge.svg)](https://github.com/WSS13Framework/business-process-agents/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue)](https://github.com/WSS13Framework/business-process-agents)
+
 A shared foundation for building production AI agents that do real work,
 fail safely, and hand off to humans when they should — not chatbots or demos.
 
