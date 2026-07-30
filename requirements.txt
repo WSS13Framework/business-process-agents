@@ -1,3 +1,4 @@
 anthropic>=0.60
+openai>=2.0
 httpx>=0.28
 beautifulsoup4>=4.12
