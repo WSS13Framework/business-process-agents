@@ -275,6 +275,29 @@ quebrada, tudo que construo em cima herda o defeito. Quanto mais tarde o
 erro aparece, mais caro. ABC é fail fast."
 
 ### Próximos passos
-- [ ] Plugar classificar_lead (scoring.py) dentro do handle do LeadTriageAgent
+- [x] Plugar classificar_lead (scoring.py) dentro do handle do LeadTriageAgent
 - [ ] Estudar typing.Protocol (comparar com ABC)
 - [ ] Seguir para os demais agentes sobre a base sólida
+
+## Pendências assumidas (dívida consciente)
+
+### Contrato de SAÍDA não é imposto por código
+O ABC garante que `buscar()` EXISTE, não que o retorno tem o formato certo.
+Uma fonte pode ignorar `_ok`/`_vazio` e devolver um dict torto — o
+`enriquecer()` aceita numa boa. Mesma limitação do ABC anotada na Fase 1:
+ele cobre a existência do método, não a assinatura nem o retorno.
+
+Decisão: DEIXAR ASSIM por enquanto, e anotar. Motivo: primeiro provar que a
+estrutura roda, depois endurecer. Mesma ordem do stub — não se endurece o
+que ainda não se viu funcionar.
+
+Quando endurecer, as opções são:
+- validar o formato dentro do `enriquecer()` (barato, imediato)
+- `typing.Protocol` + mypy (pega antes de rodar) — ver item acima
+- TypedDict pro formato do resultado
+
+### Campo `detalhe` (era `erro`)
+Renomeado porque carrega duas coisas diferentes: o MOTIVO no status `vazio`
+("não achei página sobre") e a MENSAGEM DA EXCEÇÃO no status `falha`.
+`erro` mentia no caso `vazio` — vazio não é erro, é resposta legítima.
+Ler como: "por que este resultado não traz dados".
