@@ -109,9 +109,20 @@ class SiteEnricher(BaseEnricher):
 
         descricao = ""
         for meta in sopa.find_all("meta"):
-            nome = meta.get("name", "")
-            if isinstance(nome, str) and nome.strip().lower() == "description":
-                descricao = (meta.get("content") or "").strip()
+            if _texto(meta.get("name")).lower() == "description":
+                descricao = _texto(meta.get("content"))
                 break
 
         return titulo, descricao
+
+
+def _texto(valor: object) -> str:
+    """
+    Atributo do bs4 pode vir string OU lista (atributos multi-valor).
+    A bs4 attribute can be a string OR a list (multi-valued attributes).
+    """
+    if isinstance(valor, str):
+        return valor.strip()
+    if isinstance(valor, list):
+        return " ".join(str(item) for item in valor).strip()
+    return ""

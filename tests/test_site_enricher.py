@@ -86,6 +86,18 @@ def test_timeout_vira_falha_no_enriquecer():
     assert resultados[0]["detalhe"] == "ConnectTimeout: timeout após 10s"
 
 
+def test_atributo_multi_valor_do_bs4_nao_quebra():
+    """
+    Atributo do bs4 pode vir lista em vez de string. Antes o código chamava
+    .strip() direto e estourava AttributeError. O mypy pegou; isto prende.
+    """
+    from enrichers.site_enricher import _texto
+
+    assert _texto("  description  ") == "description"
+    assert _texto(["uma", "descrição"]) == "uma descrição"
+    assert _texto(None) == ""
+
+
 def test_a_excecao_sobe_se_ninguem_tratar():
     """O SiteEnricher NÃO engole exceção — quem trata é o enriquecer()."""
     fonte = montar_fonte(ROBOTS_LIBERADO, estoura=httpx.ConnectTimeout("caiu"))
