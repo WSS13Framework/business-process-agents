@@ -10,6 +10,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from agents.lead_triage.agent import LeadTriageAgent
 from agents.lead_triage.scoring import pontuar_enriquecimento
+from tests.fakes import NEUTRO, cliente_com
 
 PESOS = {
     "empresa": {"site": 25, "youtube": 15},
@@ -101,15 +102,16 @@ def test_lista_vazia_da_zero():
 
 # ---- LeadTriageAgent ----
 def test_sem_enriquecimento_pontua_zero():
-    r = LeadTriageAgent("forja-criativa").handle("oi", "lead-001")
+    r = LeadTriageAgent("forja-criativa", cliente=cliente_com(NEUTRO)).handle("oi", "lead-001")
 
     assert r["pontos"] == 0
     assert r["classificacao"] == "frio"
-    assert r["observacoes"] == []
+    # A mensagem neutra fala ("só perguntou..."), mas não pontua.
+    assert r["observacoes"] == ["mensagem: só perguntou o que a empresa faz"]
 
 
 def test_com_enriquecimento_a_nota_sobe():
-    agente = LeadTriageAgent("forja-criativa")
+    agente = LeadTriageAgent("forja-criativa", cliente=cliente_com(NEUTRO))
 
     sem = agente.handle("oi", "lead-001")
     com = agente.handle("oi", "lead-001", enriquecimento=[OK_SITE, OK_YOUTUBE])
@@ -119,7 +121,7 @@ def test_com_enriquecimento_a_nota_sobe():
 
 
 def test_contrato_de_saida_do_agente():
-    r = LeadTriageAgent("forja-criativa").handle("oi", "lead-001")
+    r = LeadTriageAgent("forja-criativa", cliente=cliente_com(NEUTRO)).handle("oi", "lead-001")
 
     assert set(r) == {"lead_id", "pontos", "classificacao", "observacoes"}
     assert r["lead_id"] == "lead-001"
@@ -131,7 +133,7 @@ def test_enriquecimento_sozinho_nao_faz_lead_quente():
     Site + YouTube achados = 40 pontos, e a régua de quente é 70.
     Existir na internet não é intenção de compra — isso vem da conversa.
     """
-    agente = LeadTriageAgent("forja-criativa")
+    agente = LeadTriageAgent("forja-criativa", cliente=cliente_com(NEUTRO))
     r = agente.handle("oi", "lead-001", enriquecimento=[OK_SITE, OK_YOUTUBE])
 
     assert r["pontos"] == 40
