@@ -19,16 +19,97 @@ MODELO = "claude-opus-5"
 # aqui dentro junto com a resposta — apertado demais, a resposta trunca.
 MAX_TOKENS = 8192
 
-INSTRUCAO = """Você lê a mensagem de um lead e extrai sinais de intenção de compra.
+# Componente de produção, não um prompt de rascunho. Toda alteração aqui deve
+# ser validada rodando `python3 -m evals.rodar` antes de virar commit.
+# Production component, not a draft prompt. Validate every change with the evals.
+INSTRUCAO = """# Objetivo
 
-Extraia só o que a mensagem sustenta. Não deduza, não invente, não seja generoso:
-um sinal falso vale menos que sinal nenhum, porque manda o vendedor pra ligação errada.
+Você lê a mensagem de um lead e extrai sinais de intenção de compra para um
+vendedor. Devolve apenas os campos definidos em "Campos de Saída".
 
-- orcamento: a pessoa citou valor, verba, faixa de preço ou capacidade de pagar.
-- urgencia: a pessoa citou prazo, pressa ou data.
-- autoridade: a pessoa indicou que decide ou representa quem decide.
-- descadastro: a pessoa pediu pra sair, parar de receber ou não tem interesse.
-- resumo: uma frase curta, em português, do que a pessoa quer — pro vendedor ler."""
+# Regras Gerais
+
+- Classifique EXCLUSIVAMENTE pelo texto da mensagem.
+- Não use conhecimento externo, não invente, não suponha sem evidência.
+- Não infira um sinal a partir de outro: quem tem pressa não tem orçamento por
+  causa disso, e quem cita valor não vira decisor por causa disso.
+- Na dúvida, marque `false`. Um sinal falso é pior que sinal nenhum, porque manda
+  o vendedor para a ligação errada.
+
+# Critérios de Autoridade
+
+`autoridade` = a pessoa tem poder de decisão para contratar.
+
+Marque `true` quando o texto trouxer alguma destas evidências:
+
+- Posse do negócio, inclusive implícita: "tenho uma clínica", "minha empresa",
+  "meu consultório", "abri uma clínica", "nossa loja".
+- Cargo de decisão declarado: "sou fundador", "sou sócio", "sou dono",
+  "sou proprietário", "administro", "sou responsável pela empresa".
+- Intenção declarada sobre o próprio negócio: "quero implantar na minha empresa",
+  "preciso para minha clínica".
+- Poder de compra declarado, ainda que não seja o dono: "eu aprovo o orçamento",
+  "sou responsável pelas compras", "eu que decido o fornecedor".
+
+Marque `false` quando:
+
+- A pessoa se identificar como funcionário sem poder de decisão declarado.
+- A pessoa falar em nome de terceiros: agência, prestador, consultor, fornecedor.
+- A pessoa for estudante, pesquisador ou curioso.
+- Não houver evidência suficiente no texto.
+
+Um possessivo aplicado ao negócio ("minha clínica", "nossa loja") já é evidência
+suficiente. Um cargo sem possessivo e sem poder de compra declarado
+("sou gerente de marketing da Acme") não é.
+
+# Critérios do Resumo
+
+O `resumo` é a anotação que o vendedor lê antes de ligar. Ele deve:
+
+- Ter no máximo 15 palavras.
+- Estar em primeira pessoa, como se o lead falasse: "Quero...", "Preciso...".
+- Trazer só a intenção comercial principal.
+- Nunca começar com "A pessoa", "O lead" ou "O cliente".
+- Nunca ser uma pergunta dirigida a quem vende, nem verbo no infinitivo
+  ("Coletar orçamentos"), nem descrição de terceiro ("Cliente precisa de X").
+
+Quando a mensagem NÃO trouxer intenção comercial — saudação, spam, texto sem
+conteúdo — não invente intenção e não descreva a mensagem de fora
+("Mensagem sem intenção comercial"). Escreva, ainda em primeira pessoa, o que a
+pessoa fez: "Entrei em contato sem dizer o que preciso."
+
+# Campos de Saída
+
+- `orcamento` (boolean): a pessoa citou um valor, uma verba, uma faixa de preço
+  ou a própria capacidade de pagar. PERGUNTAR o preço não conta: "quanto custa?",
+  "qual o valor?" e a palavra "orçamento" sozinha são pedidos de informação, não
+  orçamento declarado.
+- `urgencia` (boolean): citou prazo, data ou pressa.
+- `autoridade` (boolean): conforme "Critérios de Autoridade".
+- `descadastro` (boolean): pediu para sair, parar de receber ou declarou não ter
+  interesse.
+- `resumo` (string): conforme "Critérios do Resumo".
+
+# Exemplos Positivos
+
+"tenho uma clínica em Botafogo, quero vídeo institucional, até 8 mil, pra outubro"
+→ orcamento true, urgencia true, autoridade true, descadastro false
+→ resumo: "Quero vídeo institucional para minha clínica até outubro."
+
+"sou responsável pelas compras da rede e preciso de proposta"
+→ orcamento false, urgencia false, autoridade true, descadastro false
+→ resumo: "Preciso de proposta para a rede onde faço as compras."
+
+# Exemplos Negativos
+
+"sou analista de marketing na Acme, meu chefe pediu pra pesquisar preços"
+→ autoridade false (funcionário sem poder de decisão declarado)
+
+"somos uma agência e buscamos parceiro de vídeo para nossos clientes"
+→ autoridade false (fala por terceiros)
+
+"faço TCC sobre marketing digital, pode me explicar como funciona?"
+→ autoridade false (estudante)"""
 
 ESQUEMA_SINAIS: dict[str, Any] = {
     "type": "object",

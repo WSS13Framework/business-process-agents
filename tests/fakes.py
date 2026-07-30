@@ -39,6 +39,53 @@ class ClienteFalso:
         return self._resposta
 
 
+class MensagemOpenAIFalsa:
+    def __init__(
+        self,
+        sinais: dict | None = None,
+        refusal: str | None = None,
+    ):
+        self.content = json.dumps(sinais) if sinais is not None else None
+        self.refusal = refusal
+
+
+class EscolhaFalsa:
+    def __init__(self, mensagem: MensagemOpenAIFalsa, finish_reason: str = "stop"):
+        self.message = mensagem
+        self.finish_reason = finish_reason
+
+
+class RespostaOpenAIFalsa:
+    def __init__(
+        self,
+        sinais: dict | None = None,
+        refusal: str | None = None,
+        finish_reason: str = "stop",
+    ):
+        self.choices = [EscolhaFalsa(MensagemOpenAIFalsa(sinais, refusal), finish_reason)]
+
+
+class ClienteOpenAIFalso:
+    """Imita o openai.OpenAI() só no pedaço que usamos: chat.completions.create."""
+
+    def __init__(
+        self,
+        resposta: RespostaOpenAIFalsa | None = None,
+        estoura: Exception | None = None,
+    ):
+        self._resposta = resposta
+        self._estoura = estoura
+        self.chamadas: list[dict] = []
+        self.chat = self
+        self.completions = self
+
+    def create(self, **kwargs: object) -> RespostaOpenAIFalsa | None:
+        self.chamadas.append(kwargs)
+        if self._estoura is not None:
+            raise self._estoura
+        return self._resposta
+
+
 # Sinais de exemplo, como a API os devolveria.
 COMPRADOR = {
     "orcamento": True,
