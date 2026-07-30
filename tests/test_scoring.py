@@ -4,6 +4,7 @@ Tests lead classification — proves hot/warm/cold works.
 """
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from agents.lead_triage.scoring import classificar_lead

@@ -3,8 +3,8 @@ Lead triage agent — the first concrete agent built on the shared base.
 Agente de triagem de lead — o primeiro agente concreto sobre a base compartilhada.
 """
 
-from core.base_agent import BaseAgent
 from agents.lead_triage.scoring import classificar_lead, pontuar_enriquecimento
+from core.base_agent import BaseAgent
 
 # Régua e pesos ficam aqui por enquanto; vêm da config do tenant depois.
 # Thresholds and weights live here for now; they'll come from tenant config.
