@@ -5,6 +5,7 @@ description = "Agentes autônomos de processos de negócio sobre uma base compar
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "anthropic>=0.60",
     "httpx>=0.28",
     "beautifulsoup4>=4.12",
 ]
