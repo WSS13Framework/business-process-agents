@@ -25,6 +25,27 @@ The full reasoning — interface contracts, per-tenant scoring, retry vs. circui
 breaker, autonomy limits vs. red lines — is documented in
 [ARCHITECTURE.md](./ARCHITECTURE.md).
 
+## Setup
+
+```bash
+pip install -r requirements-dev.txt
+
+cp .env.example .env          # preencha com a sua chave / fill in your key
+set -a; source .env; set +a   # exporta pro ambiente / export to the environment
+
+pytest                        # roda offline, sem chave / runs offline, no key needed
+```
+
+A chave **nunca** entra no código. O SDK lê `ANTHROPIC_API_KEY` do ambiente
+sozinho — por isso o cliente é construído sem argumento: `anthropic.Anthropic()`.
+O `.env` é ignorado pelo git; só o `.env.example`, sem segredo, é versionado.
+
+The key **never** goes in the code. The SDK reads `ANTHROPIC_API_KEY` from the
+environment on its own — which is why the client takes no argument.
+
+> Chave commitada em repositório público é revogada pela Anthropic em minutos
+> por varredura automática. Até lá, roda no seu crédito.
+
 ## Stack
 
 `Python` · `Claude API` · `n8n` · `PostgreSQL` · vector store · structured logging

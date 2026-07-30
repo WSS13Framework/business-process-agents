@@ -1,7 +1,13 @@
+# Segredos: .env fica só na máquina. Chave em repo público é revogada pela
+# Anthropic em minutos por varredura automática — e até lá roda no seu crédito.
 .env
 .env.*
+# ...menos o modelo, que não tem segredo nenhum e precisa ser versionado.
+!.env.example
+
 __pycache__/
 *.pyc
 .venv/
 venv/
 *.log
+.pytest_cache/
