@@ -1,0 +1,199 @@
+"""
+Comparação entre o gabarito e o que o modelo devolveu. Sem rede, sem API.
+Comparison between the answer key and what the model returned. No network.
+
+Fica separado do runner de propósito: assim a lógica que decide "isto é uma
+regressão" tem teste offline e roda na CI, mesmo que a chamada real não role.
+Kept apart from the runner on purpose, so the "is this a regression" logic is
+itself unit-tested and runs in CI even when the live call cannot.
+"""
+
+import re
+from typing import Any
+
+MAX_PALAVRAS_RESUMO = 15
+
+# Se o resumo começa assim, não está em primeira pessoa.
+ABERTURAS_TERCEIRA_PESSOA = (
+    "a pessoa",
+    "o lead",
+    "a lead",
+    "o cliente",
+    "a cliente",
+    "o usuário",
+    "ele ",
+    "ela ",
+)
+
+# Primeira pessoa em português tem duas marcas confiáveis: pronome/possessivo,
+# e verbo terminado em -mos (1ª do plural). O resto é lista de verbos comuns
+# na 1ª do singular, que não têm terminação única que os distinga.
+PRONOMES_PRIMEIRA_PESSOA = {
+    "eu",
+    "nós",
+    "nos",
+    "me",
+    "mim",
+    "meu",
+    "meus",
+    "minha",
+    "minhas",
+    "nosso",
+    "nossos",
+    "nossa",
+    "nossas",
+    "comigo",
+    "conosco",
+}
+
+VERBOS_PRIMEIRA_PESSOA = {
+    "quero",
+    "queria",
+    "preciso",
+    "precisava",
+    "tenho",
+    "tinha",
+    "busco",
+    "buscava",
+    "procuro",
+    "procurava",
+    "gostaria",
+    "estou",
+    "estava",
+    "sou",
+    "era",
+    "pretendo",
+    "faço",
+    "fiz",
+    "montei",
+    "abri",
+    "fundei",
+    "administro",
+    "trabalho",
+    "atendo",
+    "presto",
+    "vendo",
+    "compro",
+    "aprovo",
+    "decido",
+    "cuido",
+    "gerencio",
+    "represento",
+    "estudo",
+    "pesquiso",
+    "recomendo",
+    "indico",
+    # pretéritos irregulares, que não terminam em -ei
+    "fui",
+    "vi",
+    "li",
+    "quis",
+    "pude",
+    "tive",
+    "vim",
+    "dei",
+    "disse",
+    # pretérito da 1ª do singular terminado em -i. Vai por lista porque a
+    # terminação sozinha pegaria 'aqui', 'ali', 'daqui'.
+    "pedi",
+    "saí",
+    "sai",
+    "parti",
+    "vendi",
+    "respondi",
+    "decidi",
+    "conheci",
+    "recebi",
+    "percebi",
+    "escolhi",
+    "assisti",
+    "descobri",
+}
+
+
+def checar_resumo(resumo: str) -> list[str]:
+    """
+    Devolve a lista de restrições violadas. Lista vazia = resumo dentro das regras.
+    Returns the list of violated constraints. Empty list = the summary is fine.
+    """
+    problemas = []
+    texto = (resumo or "").strip()
+
+    if not texto:
+        return ["resumo vazio"]
+
+    palavras = len(texto.split())
+    if palavras > MAX_PALAVRAS_RESUMO:
+        problemas.append(f"{palavras} palavras (máximo {MAX_PALAVRAS_RESUMO})")
+
+    minusculo = texto.lower()
+
+    if minusculo.startswith(ABERTURAS_TERCEIRA_PESSOA):
+        problemas.append("começa em terceira pessoa")
+    elif not _tem_primeira_pessoa(minusculo):
+        problemas.append("sem marca de primeira pessoa")
+
+    return problemas
+
+
+def _tem_primeira_pessoa(texto: str) -> bool:
+    palavras = re.findall(r"[a-zà-ú]+", texto)
+
+    for p in palavras:
+        if p in PRONOMES_PRIMEIRA_PESSOA or p in VERBOS_PRIMEIRA_PESSOA:
+            return True
+        # -mos é a 1ª do plural: estamos, queremos, temos, precisamos, buscamos.
+        if len(p) > 4 and p.endswith("mos"):
+            return True
+        # -ei é o pretérito da 1ª do singular: gostei, entrei, montei, solicitei.
+        # O corte em 5 letras evita 'lei', 'rei', 'grei'.
+        if len(p) >= 5 and p.endswith("ei"):
+            return True
+
+    return False
+
+
+def comparar(caso: dict[str, Any], devolvido: dict[str, Any]) -> list[dict[str, Any]]:
+    """
+    Confronta um caso com o que o modelo devolveu.
+
+    Só cobra os campos que o caso declarou. O que não está no gabarito não é
+    divergência — ninguém precisa opinar sobre 'urgencia' num caso de autoridade.
+    Only the fields the case declared are checked.
+    """
+    divergencias = []
+
+    for campo, esperado in caso["esperado"].items():
+        obtido = devolvido.get(campo)
+        if obtido != esperado:
+            divergencias.append({"campo": campo, "esperado": esperado, "devolvido": obtido})
+
+    for problema in checar_resumo(str(devolvido.get("resumo", ""))):
+        divergencias.append(
+            {"campo": "resumo", "esperado": problema, "devolvido": devolvido.get("resumo")}
+        )
+
+    return divergencias
+
+
+def resumir(resultados: list[dict[str, Any]]) -> dict[str, Any]:
+    """Consolida a rodada: quantos passaram, quais campos mais erraram."""
+    passaram = [r for r in resultados if not r["divergencias"] and not r.get("erro")]
+    falharam = [r for r in resultados if r["divergencias"] or r.get("erro")]
+
+    por_campo: dict[str, int] = {}
+    por_categoria: dict[str, int] = {}
+    for r in falharam:
+        por_categoria[r["categoria"]] = por_categoria.get(r["categoria"], 0) + 1
+        for d in r["divergencias"]:
+            por_campo[d["campo"]] = por_campo.get(d["campo"], 0) + 1
+
+    total = len(resultados)
+    return {
+        "total": total,
+        "passaram": len(passaram),
+        "falharam": len(falharam),
+        "taxa": len(passaram) / total if total else 0.0,
+        "por_campo": dict(sorted(por_campo.items(), key=lambda kv: -kv[1])),
+        "por_categoria": dict(sorted(por_categoria.items(), key=lambda kv: -kv[1])),
+    }
