@@ -244,3 +244,37 @@ a pontuação NÃO usa banco vetorial? (Dica: buscar informação ≠ aplicar cr
 decisão de escalar pro humano — de forma natural, numa conversa, em português e
 em inglês. Quando isso sair leve, você está pronto pra qualquer entrevista sobre
 esse projeto.
+## Fase 1 — ABC (Abstract Base Class) ✅
+
+### 1. O contrato
+- `ABC` + `@abstractmethod` transformam "todo agente TEM que ter handle"
+  de convenção informal em garantia forçada pelo runtime.
+- Indentação em Python é ESTRUTURA, não estética. Define o que pertence
+  à classe. Sempre 4 espaços, nunca tab (PEP 8).
+- `ABC` funciona por baixo através de uma metaclass (ABCMeta).
+- LIMITE: o ABC garante que o método EXISTE, não que a ASSINATURA está
+  certa. Pra isso, combinar com typing.Protocol ou mypy. (→ próximo estudo)
+
+### 2. Os três estados (vistos rodando na máquina)
+- Recusa instanciar a base abstrata direta.
+- Recusa o filho que herda mas não implementa (abstrato é herdado).
+- Aceita o filho que implementa o handle.
+
+### 3. Dicionário vs JSON
+- dict = objeto vivo dentro do Python, fácil de manipular.
+- JSON = formato de texto pra enviar/guardar (aspas duplas, true/false/null).
+- Converter: json.dumps (dict → JSON), json.loads (JSON → dict). = serializar.
+- Chave → valor: chave é pergunta, valor é resposta. Chave é única.
+
+### 4. Fail fast (a resposta de entrevista)
+"Usei ABC porque ele faz o erro aparecer cedo — na criação do agente, na
+minha máquina — em vez de tarde, em produção com cliente real. É a diferença
+entre trocar um cano antes de assentar e quebrar a parede depois de entregue.
+Código é feito de camadas que dependem umas das outras: se a base sobe
+quebrada, tudo que construo em cima herda o defeito. Quanto mais tarde o
+erro aparece, mais caro. ABC é fail fast."
+
+### Próximos passos
+- [ ] Plugar classificar_lead (scoring.py) dentro do handle do LeadTriageAgent
+- [ ] Estudar typing.Protocol (comparar com ABC)
+- [ ] Seguir para os demais agentes sobre a base sólida
