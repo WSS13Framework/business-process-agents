@@ -2,11 +2,24 @@
 Prova o cliente da Evolution sem instância e sem rede.
 Proves the Evolution client with no instance and no network.
 
-ATENÇÃO: estes testes provam que o código trata CORRETAMENTE o contrato
-DOCUMENTADO. Eles não provam que o contrato documentado é o real — não houve
-acesso a instância. Quando houver credencial, `Evolution.bruto()` mostra o
-formato de verdade, e é ele que manda.
-These tests prove handling of the DOCUMENTED contract, not that it is the real one.
+CLASSIFICAÇÃO OBRIGATÓRIA NESTE ARQUIVO:
+
+  test_...            FATO — afirma só o comportamento do NOSSO código diante
+                      de uma entrada dada. Vale mesmo que a Evolution seja
+                      completamente diferente do que supomos.
+
+  test_HIPOTESE_...   Afirma algo sobre a EVOLUTION que nunca foi observado.
+                      Verde aqui NÃO é validação: se a suposição estiver
+                      errada, o teste passa e a produção falha.
+
+Documentação é hipótese; verdade é execução. Havendo divergência entre a
+documentação e a resposta real da API, a documentação está errada e É O TESTE
+QUE MUDA — nunca o contrário.
+Documentation is hypothesis; execution is truth. On divergence, the test changes.
+
+Para promover HIPÓTESE a FATO basta uma chamada real:
+    python3 -c "import sys,json;sys.path.insert(0,'.')
+    from core.evolution import Evolution; print(json.dumps(Evolution().bruto(),indent=2))"
 """
 
 import json
@@ -20,6 +33,8 @@ import pytest
 
 from core.evolution import Evolution, _normalizar, _registros
 
+# Os três fixtures abaixo são HIPÓTESE: formato de registro tirado da
+# documentação e de SDK de terceiro, nunca observado numa resposta real.
 RECEBIDA = {
     "key": {"remoteJid": "5511999990000@s.whatsapp.net", "fromMe": False, "id": "MSG1"},
     "pushName": "Marcos",
@@ -54,7 +69,11 @@ def test_aceita_lista_nua():
 
 
 def test_aceita_envelope_aninhado():
-    """As fontes divergem entre lista nua e messages.records — aceitar as duas."""
+    """
+    FATO sobre o parser: ele extrai destes três formatos.
+    Ressalva: a ESCOLHA dos três é hipótese. Se o real for um quarto formato,
+    este teste passa e `_registros` devolve lista vazia em produção.
+    """
     assert _registros({"messages": {"records": [RECEBIDA]}}) == [RECEBIDA]
     assert _registros({"messages": [RECEBIDA]}) == [RECEBIDA]
     assert _registros({"records": [RECEBIDA]}) == [RECEBIDA]
@@ -68,7 +87,12 @@ def test_formato_desconhecido_devolve_vazio_em_vez_de_quebrar():
 
 
 # ---- _normalizar ----
-def test_mensagem_recebida_vira_o_minimo_que_o_pipeline_usa():
+def test_HIPOTESE_mensagem_recebida_vira_o_minimo_que_o_pipeline_usa():
+    # HIPÓTESE: os nomes de campo key.remoteJid, key.fromMe, key.id, pushName,
+    # message.conversation e messageTimestamp vêm de documentação e de SDK de
+    # terceiro. Nenhum foi observado numa resposta real.
+    # FALTA: uma saída de Evolution.bruto() de instância real mostrando os
+    # nomes de verdade.
     n = _normalizar(RECEBIDA)
 
     assert n == {
@@ -81,18 +105,35 @@ def test_mensagem_recebida_vira_o_minimo_que_o_pipeline_usa():
     }
 
 
-def test_telefone_sai_sem_o_sufixo_do_jid():
-    """O telefone vira lead_id; '@s.whatsapp.net' não faz parte da identidade."""
+def test_HIPOTESE_telefone_sai_sem_o_sufixo_do_jid():
+    """
+    HIPÓTESE, e a mais frágil do arquivo: que remoteJid seja
+    'telefone@s.whatsapp.net' E que esse telefone seja o número real.
+    A issue #1916 do projeto se chama literalmente '[BUG] remoteJid is
+    different than the real whatsapp number'.
+    FALTA: comparar o remoteJid de uma mensagem real com o número que a enviou.
+    Se divergirem, lead_id extraído daqui identifica a pessoa errada.
+    """
     assert _normalizar(RECEBIDA)["telefone"] == "5511999990000"
 
 
-def test_mensagem_que_nos_enviamos_e_ignorada():
-    """fromMe é resposta nossa, não mensagem de lead."""
+def test_HIPOTESE_mensagem_que_nos_enviamos_e_ignorada():
+    """
+    HIPÓTESE: que o campo se chame `fromMe` e seja booleano.
+    FALTA: um registro real de mensagem enviada pela própria conta.
+    Se o nome for outro, nossas respostas entram no pipeline como se fossem
+    mensagens do lead.
+    """
     assert _normalizar(ENVIADA) is None
 
 
-def test_audio_e_ignorado():
-    """O pipeline só lê texto. Descartar é honesto; inventar transcrição não."""
+def test_HIPOTESE_audio_e_ignorado():
+    """
+    HIPÓTESE: que áudio venha em message.audioMessage e SEM
+    message.conversation.
+    FALTA: um áudio real recebido. Se áudio trouxer conversation preenchido
+    com legenda ou transcrição, ele entra no pipeline como texto do lead.
+    """
     assert _normalizar(AUDIO) is None
 
 
@@ -103,7 +144,13 @@ def test_registro_torto_nao_quebra():
 
 
 # ---- o cliente monta o pedido certo ----
-def test_manda_apikey_e_o_caminho_da_instancia():
+def test_HIPOTESE_manda_apikey_e_o_caminho_da_instancia():
+    # HIPÓTESE em três partes, e uma delas é pior que as outras:
+    #   caminho /chat/findMessages/{instancia}  — documentado
+    #   header  apikey                          — documentado
+    #   corpo   {"where": {}} traz TODAS         — SEM FONTE, inferência minha
+    # FALTA: uma chamada real. HTTP 200 promove caminho e header. O `where`
+    # vazio exige comparar o resultado com e sem filtro.
     capturado = {}
 
     def responder(req: httpx.Request) -> httpx.Response:
@@ -124,7 +171,11 @@ def test_manda_apikey_e_o_caminho_da_instancia():
     assert capturado["corpo"] == {"where": {}}
 
 
-def test_filtro_por_conversa_entra_no_corpo():
+def test_HIPOTESE_filtro_por_conversa_entra_no_corpo():
+    # HIPÓTESE: corpo {"where": {"key": {"remoteJid": ...}}}. Documentado, e a
+    # issue #1632 do projeto relata este filtro não funcionando em algumas
+    # versões — ou seja, a documentação já diverge do comportamento relatado.
+    # FALTA: chamar com filtro e conferir que só volta a conversa pedida.
     capturado = {}
 
     def responder(req: httpx.Request) -> httpx.Response:
@@ -140,7 +191,9 @@ def test_filtro_por_conversa_entra_no_corpo():
     }
 
 
-def test_filtra_enviadas_e_audio_numa_carga_mista():
+def test_HIPOTESE_filtra_enviadas_e_audio_numa_carga_mista():
+    # HIPÓTESE: herda o formato de registro dos três fixtures acima.
+    # FALTA: a mesma saída real de bruto() que promove os anteriores.
     recebidas = montar([RECEBIDA, ENVIADA, AUDIO]).mensagens()
 
     assert len(recebidas) == 1
