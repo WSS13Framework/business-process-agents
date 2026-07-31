@@ -7,10 +7,12 @@ from datetime import datetime, timezone
 from typing import Any
 
 from agents.lead_triage.acumulo import acumular, agentes_distintos
+from agents.lead_triage.escalada import decidir_escalada
 from agents.lead_triage.scoring import classificar_lead, pontuar_enriquecimento
 from agents.lead_triage.signals import MensagemEnricher, pontuar_sinais
 from core.base_agent import BaseAgent
 from core.base_enricher import enriquecer
+from core.log import LOGGER, registro_da_decisao
 from core.memoria import MemoriaEmMemoria, MemoriaLead
 
 # Régua e pesos ficam aqui por enquanto; vêm da config do tenant depois.
@@ -105,7 +107,7 @@ class LeadTriageAgent(BaseAgent):
 
         pontos = max(pontos_ext + pontos_msg, 0)
 
-        return {
+        resultado = {
             "lead_id": lead_id,
             "pontos": pontos,
             "classificacao": classificar_lead(pontos, REGUA_PADRAO),
@@ -114,3 +116,18 @@ class LeadTriageAgent(BaseAgent):
             "agente_indicado": estado["agente_indicado"],
             "agentes_vistos": agentes_distintos(estado),
         }
+
+        escalar, motivo = decidir_escalada(resultado, estado, resultado_msg["status"])
+        resultado["escalar"] = escalar
+        resultado["motivo_escalada"] = motivo
+
+        # Uma linha por decisão, com o status de cada fonte. Sem isto, falha às
+        # 3h da manhã some: o lead é atendido, a observação é gerada, e ninguém
+        # fica sabendo.
+        fontes = [resultado_msg, *(enriquecimento or [])]
+        LOGGER.info(
+            "lead classificado",
+            extra=registro_da_decisao(self.tenant_id, lead_id, resultado, fontes),
+        )
+
+        return resultado

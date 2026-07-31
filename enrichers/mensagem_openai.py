@@ -11,18 +11,20 @@ Reaproveita a INSTRUCAO e o ESQUEMA_SINAIS da versão Anthropic de propósito �
 prompt diferente compararia prompts, não provedores.
 """
 
-import json
 from typing import Any
 
 import openai
 
-from agents.lead_triage.signals import ESQUEMA_SINAIS, INSTRUCAO
+from agents.lead_triage.signals import ESQUEMA_SINAIS, INSTRUCAO, _como_dicionario
 from core.base_enricher import BaseEnricher
 
 # Structured outputs em modo estrito exige um modelo que suporte json_schema.
 MODELO = "gpt-4o"
 
 MAX_TOKENS = 1024
+
+# Teto por tentativa; ver a mesma constante em signals.py.
+TIMEOUT_SEGUNDOS = 30.0
 
 
 class MensagemEnricherOpenAI(BaseEnricher):
@@ -45,7 +47,7 @@ class MensagemEnricherOpenAI(BaseEnricher):
         if not pista.strip():
             return self._vazio("mensagem vazia")
 
-        cliente = self._cliente or openai.OpenAI()
+        cliente = self._cliente or openai.OpenAI(timeout=TIMEOUT_SEGUNDOS)
 
         resposta = cliente.chat.completions.create(
             model=MODELO,
@@ -83,4 +85,4 @@ class MensagemEnricherOpenAI(BaseEnricher):
         if not conteudo:
             return self._vazio(f"o modelo não devolveu conteúdo ({escolha.finish_reason})")
 
-        return self._ok(json.loads(conteudo))
+        return self._ok(_como_dicionario(conteudo))

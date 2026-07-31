@@ -131,6 +131,8 @@ def test_contrato_de_saida_do_agente():
         "mensagens",
         "agente_indicado",
         "agentes_vistos",
+        "escalar",
+        "motivo_escalada",
     }
     assert r["lead_id"] == "lead-001"
     assert r["classificacao"] in {"quente", "morno", "frio"}

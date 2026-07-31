@@ -15,6 +15,12 @@ from core.base_enricher import BaseEnricher
 
 MODELO = "claude-opus-5"
 
+# Teto POR TENTATIVA. O SDK repete 3 vezes por padrão (max_retries=2), então o
+# pior caso é 3x isto. Sem timeout explícito o default é 600s, e 3x600 deixaria
+# um lead esperando meia hora antes de a falha sequer virar observação.
+# Per-attempt ceiling. The SDK retries 3x, so worst case is 3x this.
+TIMEOUT_SEGUNDOS = 30.0
+
 # Teto de saída. O modelo pensa por padrão no Opus 5, e o pensamento conta
 # aqui dentro junto com a resposta — apertado demais, a resposta trunca.
 MAX_TOKENS = 8192
@@ -237,7 +243,7 @@ class MensagemEnricher(BaseEnricher):
         if not pista.strip():
             return self._vazio("mensagem vazia")
 
-        cliente = self._cliente or anthropic.Anthropic()
+        cliente = self._cliente or anthropic.Anthropic(timeout=TIMEOUT_SEGUNDOS)
 
         resposta = cliente.messages.create(
             model=MODELO,
@@ -270,7 +276,7 @@ class MensagemEnricher(BaseEnricher):
         if not texto:
             return self._vazio("o modelo não devolveu texto")
 
-        return self._ok(json.loads(texto))
+        return self._ok(_como_dicionario(texto))
 
 
 def pontuar_sinais(resultado: dict, pesos: dict) -> tuple[int, list[str]]:
@@ -311,3 +317,15 @@ def pontuar_sinais(resultado: dict, pesos: dict) -> tuple[int, list[str]]:
             observacoes.append(f"sinal: {nome} ({peso:+d})")
 
     return pontos, observacoes
+
+
+def _como_dicionario(texto: str) -> dict:
+    """
+    JSON válido não garante objeto: `[1,2]` e `"oi"` passam pelo json.loads e
+    quebram no .get() lá na frente com AttributeError sem explicação.
+    Valid JSON is not necessarily an object.
+    """
+    carregado = json.loads(texto)
+    if not isinstance(carregado, dict):
+        raise ValueError(f"esperava objeto JSON, veio {type(carregado).__name__}")
+    return carregado

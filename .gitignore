@@ -11,3 +11,6 @@ __pycache__/
 venv/
 *.log
 .pytest_cache/
+
+# banco local do MVP
+*.db
