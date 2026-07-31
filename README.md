@@ -31,10 +31,21 @@ breaker, autonomy limits vs. red lines — is documented in
 pip install -r requirements-dev.txt
 
 cp .env.example .env          # preencha com a sua chave / fill in your key
+chmod 600 .env                # SÓ VOCÊ LÊ — veja abaixo / owner-only, see below
 set -a; source .env; set +a   # exporta pro ambiente / export to the environment
 
 pytest                        # roda offline, sem chave / runs offline, no key needed
 ```
+
+O `chmod 600` não é zelo — é correção de uma exposição real. Com `umask 0002`,
+que é o padrão de várias distribuições, o `cp` acima cria o `.env` com modo
+**664**: legível por qualquer conta da máquina. O `.gitignore` protege contra o
+git e não protege contra isso. Numa máquina com mais de um usuário — e uma
+conta de serviço como `postgres` conta —, a chave fica ao alcance de quem
+souber o caminho, e o caminho está neste README.
+
+The `chmod 600` fixes a real exposure: with `umask 0002` the copy above creates
+a world-readable `.env`. `.gitignore` does not protect against that.
 
 A chave **nunca** entra no código. O SDK lê `ANTHROPIC_API_KEY` do ambiente
 sozinho — por isso o cliente é construído sem argumento: `anthropic.Anthropic()`.

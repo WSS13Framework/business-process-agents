@@ -12,6 +12,7 @@ from typing import Any
 import anthropic
 
 from core.base_enricher import BaseEnricher
+from core.log import LOGGER
 
 MODELO = "claude-opus-5"
 
@@ -20,6 +21,14 @@ MODELO = "claude-opus-5"
 # um lead esperando meia hora antes de a falha sequer virar observação.
 # Per-attempt ceiling. The SDK retries 3x, so worst case is 3x this.
 TIMEOUT_SEGUNDOS = 30.0
+
+# Preço do claude-opus-5 em dólar por milhão de tokens, conforme a tabela
+# vigente. CONSTANTE MANUAL: se a Anthropic mudar o preço, este número passa a
+# mentir sem avisar. Os tokens no log são fato; o custo é aritmética em cima
+# deles e só vale enquanto estes dois números estiverem certos.
+# Manual constant — if pricing changes, this silently lies. Tokens are the fact.
+PRECO_ENTRADA_POR_MILHAO = 5.00
+PRECO_SAIDA_POR_MILHAO = 25.00
 
 # Teto de saída. O modelo pensa por padrão no Opus 5, e o pensamento conta
 # aqui dentro junto com a resposta — apertado demais, a resposta trunca.
@@ -260,6 +269,12 @@ class MensagemEnricher(BaseEnricher):
             },
         )
 
+        # O consumo já vinha na resposta e estava sendo descartado. Sem isto,
+        # o custo de atender um lead não existe em lugar nenhum — e mensagem
+        # gigante custa dez conversas normais sem deixar rastro.
+        # The usage was already in the response and was being thrown away.
+        _registrar_consumo(resposta)
+
         # O modelo pode recusar por segurança: vem HTTP 200 com content vazio.
         # Ler content[0] direto quebraria aqui.
         if resposta.stop_reason == "refusal":
@@ -329,3 +344,35 @@ def _como_dicionario(texto: str) -> dict:
     if not isinstance(carregado, dict):
         raise ValueError(f"esperava objeto JSON, veio {type(carregado).__name__}")
     return carregado
+
+
+def _registrar_consumo(resposta: Any) -> None:
+    """
+    Emite tokens e custo de uma chamada. Nunca levanta exceção.
+    Emits tokens and cost for one call. Never raises.
+
+    Blindado de propósito: log de custo não pode derrubar o atendimento de um
+    lead. Se `usage` não vier — dublê de teste, mudança de SDK — grava zero e
+    segue. Falhar aqui trocaria um problema de contabilidade por um de produção.
+    Deliberately defensive: cost logging must never break lead handling.
+    """
+    consumo = getattr(resposta, "usage", None)
+    entrada = int(getattr(consumo, "input_tokens", 0) or 0)
+    saida = int(getattr(consumo, "output_tokens", 0) or 0)
+
+    custo = (
+        entrada * PRECO_ENTRADA_POR_MILHAO + saida * PRECO_SAIDA_POR_MILHAO
+    ) / 1_000_000
+
+    LOGGER.info(
+        "llm consultado",
+        extra={
+            "modelo": MODELO,
+            "tokens_entrada": entrada,
+            "tokens_saida": saida,
+            "custo_usd": round(custo, 6),
+            # O request_id é o que a Anthropic pede quando você abre suporte.
+            # Sai de graça e só serve quando algo dá errado.
+            "request_id": getattr(resposta, "_request_id", None),
+        },
+    )

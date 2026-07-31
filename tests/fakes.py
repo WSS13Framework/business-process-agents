@@ -4,6 +4,7 @@ Claude API stand-ins — so tests run offline, free, and identical every time.
 """
 
 import json
+import logging
 
 
 class BlocoTexto:
@@ -115,3 +116,43 @@ NEUTRO = {
 
 def cliente_com(sinais: dict | None = None, estoura: Exception | None = None) -> ClienteFalso:
     return ClienteFalso(RespostaFalsa(sinais), estoura=estoura)
+
+
+class CapturaDeLog:
+    """
+    Captura registros do LOGGER anexando um handler direto nele.
+    Captures LOGGER records by attaching a handler to it directly.
+
+    O `caplog` do pytest não serve aqui: ele depende de propagação para o root,
+    e `core/log.py` define `propagate = False` de propósito, para a linha não
+    sair duplicada quando a aplicação já configurou logging. A propagação
+    desligada está certa em produção; quem se adapta é o teste.
+    pytest's caplog relies on propagation, which production disables on purpose.
+    """
+
+    class _Coletor(logging.Handler):
+        def __init__(self, destino: list[logging.LogRecord]) -> None:
+            super().__init__()
+            self._destino = destino
+
+        def emit(self, record: logging.LogRecord) -> None:
+            self._destino.append(record)
+
+    def __init__(self) -> None:
+        self.registros: list[logging.LogRecord] = []
+        self._handler = self._Coletor(self.registros)
+
+    def __enter__(self) -> "CapturaDeLog":
+        from core.log import LOGGER
+
+        LOGGER.addHandler(self._handler)
+        LOGGER.setLevel(logging.INFO)
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        from core.log import LOGGER
+
+        LOGGER.removeHandler(self._handler)
+
+    def evento(self, nome: str) -> list[logging.LogRecord]:
+        return [r for r in self.registros if r.getMessage() == nome]

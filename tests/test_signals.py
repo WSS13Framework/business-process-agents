@@ -20,7 +20,15 @@ from agents.lead_triage.signals import (
     MensagemEnricher,
     pontuar_sinais,
 )
-from tests.fakes import COMPRADOR, NEUTRO, SAINDO, ClienteFalso, RespostaFalsa, cliente_com
+from tests.fakes import (
+    COMPRADOR,
+    NEUTRO,
+    SAINDO,
+    CapturaDeLog,
+    ClienteFalso,
+    RespostaFalsa,
+    cliente_com,
+)
 
 
 def fonte(sinais: dict | None = None) -> MensagemEnricher:
@@ -187,3 +195,53 @@ def test_llm_fora_do_ar_nao_derruba_o_atendimento():
 
     assert r["classificacao"] == "frio"
     assert any("não consegui analisar" in o for o in r["observacoes"])
+
+
+# ---- captura de consumo (Etapa 1) ----
+class ConsumoFalso:
+    def __init__(self, entrada: int, saida: int):
+        self.input_tokens = entrada
+        self.output_tokens = saida
+
+
+def test_registra_tokens_e_custo():
+    """O consumo já vinha na resposta e era descartado."""
+    resposta = RespostaFalsa(NEUTRO)
+    resposta.usage = ConsumoFalso(1000, 200)
+    resposta._request_id = "req_abc123"
+
+    with CapturaDeLog() as log:
+        MensagemEnricher(cliente=ClienteFalso(resposta)).buscar("tenho uma clinica")
+
+    registros = log.evento("llm consultado")
+    assert len(registros) == 1
+
+    r = registros[0]
+    assert r.tokens_entrada == 1000
+    assert r.tokens_saida == 200
+    # 1000 * 5/1M + 200 * 25/1M = 0.005 + 0.005
+    assert r.custo_usd == 0.01
+    assert r.request_id == "req_abc123"
+    assert r.modelo == "claude-opus-5"
+
+
+def test_resposta_sem_usage_nao_quebra_o_atendimento():
+    """
+    Log de custo não pode derrubar o atendimento de um lead. Sem `usage` —
+    mudança de SDK, dublê antigo — grava zero e segue.
+    """
+    with CapturaDeLog() as log:
+        r = MensagemEnricher(cliente=ClienteFalso(RespostaFalsa(NEUTRO))).buscar("oi")
+
+    assert r["status"] == "ok", "a classificação segue mesmo sem consumo"
+
+    registro = log.evento("llm consultado")[0]
+    assert registro.tokens_entrada == 0 and registro.tokens_saida == 0
+
+
+def test_mensagem_vazia_nao_registra_consumo():
+    """Não há chamada, logo não há consumo a registrar."""
+    with CapturaDeLog() as log:
+        MensagemEnricher(cliente=ClienteFalso(RespostaFalsa(NEUTRO))).buscar("   ")
+
+    assert log.evento("llm consultado") == []
