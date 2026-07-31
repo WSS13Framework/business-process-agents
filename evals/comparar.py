@@ -253,6 +253,23 @@ def taxa_por_campo(resultados: list[dict[str, Any]]) -> dict[str, dict[str, Any]
     }
 
 
+def taxa_por_fronteira(resultados: list[dict[str, Any]]) -> dict[str, dict[str, dict[str, Any]]]:
+    """
+    Separa os casos de fronteira dos demais e mede cada grupo por campo.
+    Splits boundary cases from the rest and measures each group per field.
+
+    Um número só esconde a fronteira: caso fácil é maioria e dilui o difícil.
+    Uma queda de 100% para 89% no grupo 'atrito' some dentro de um total que
+    mal se move, e é justamente ali que a regressão aparece primeiro.
+    A single number hides the boundary — easy cases outnumber and dilute.
+    """
+    grupos: dict[str, list[dict[str, Any]]] = {"atrito": [], "demais": []}
+    for r in resultados:
+        grupos["atrito" if r.get("atrito") else "demais"].append(r)
+
+    return {nome: taxa_por_campo(rs) for nome, rs in grupos.items()}
+
+
 def resumir(resultados: list[dict[str, Any]]) -> dict[str, Any]:
     """Consolida a rodada: quantos passaram, quais campos mais erraram."""
     passaram = [r for r in resultados if not r["divergencias"] and not r.get("erro")]

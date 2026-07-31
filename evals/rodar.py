@@ -20,7 +20,7 @@ from typing import Any
 
 from core.base_enricher import BaseEnricher, enriquecer
 from evals.casos import CASOS
-from evals.comparar import comparar, resumir
+from evals.comparar import comparar, resumir, taxa_por_fronteira
 
 VERDE = "\033[32m"
 VERMELHO = "\033[31m"
@@ -118,6 +118,15 @@ def main() -> int:
     s = resumir(resultados)
     print(f"\n{'=' * 60}")
     print(f"{s['passaram']}/{s['total']} passaram  ({s['taxa']:.0%})")
+
+    # Duas taxas separadas: um numero so esconde a fronteira.
+    fronteira = taxa_por_fronteira(resultados)
+    for grupo in ("atrito", "demais"):
+        campos = fronteira[grupo]
+        if not campos:
+            continue
+        linha = "  ".join(f"{c} {v['taxa']:.0%}" for c, v in campos.items())
+        print(f"  {grupo:8} {linha}")
     if s["por_campo"]:
         print(f"campos que mais erraram : {s['por_campo']}")
     if s["por_categoria"]:

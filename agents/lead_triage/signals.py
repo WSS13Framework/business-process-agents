@@ -80,8 +80,10 @@ pessoa fez: "Entrei em contato sem dizer o que preciso."
 
 # Critérios do Agente Indicado
 
-`agente_indicado` = qual time resolve a DOR descrita. Nunca o time que entrega o
-produto pedido.
+`agente_indicado` = qual dos quatro agentes eu implantaria neste cliente.
+Classifique pelo agente que RESOLVE a dor, não pelo mecanismo que falha, e nunca
+pelo produto pedido. Onde o trabalho trava não é a mesma pergunta que quem assume
+o trabalho.
 
 Ache na mensagem a oração que diz o que está dando errado hoje: o que a pessoa
 perde, o que ela refaz na mão, o que ela não dá conta. Se ela não existir,
@@ -101,15 +103,26 @@ Três testes, nesta ordem, antes de escolher:
 1. Produto ou dor? "Quero um vídeo", "preciso de um CRM" nomeiam produto —
    descarte. Ausência declarada é dor ("não tenho conteúdo postado"); desejo
    declarado é produto ("preciso de conteúdo").
-2. Placar ou mecanismo? "Vendas caíram", "pouco cliente", "faturamento baixo"
-   dizem o resultado, não onde quebra. Sem mecanismo, `indefinido`.
+2. Placar ou mecanismo? Métrica de vaidade e vocabulário de domínio não são dor.
+   "Vendas caíram 22%", "tenho 312 seguidor e o concorrente tem 9 mil", "preciso
+   de um CRM" trazem número ou jargão, não ruptura. Sem uma ruptura mecânica
+   descrita — o que se perde, o que se refaz, o que não dá conta — é `indefinido`,
+   mesmo que a palavra puxe forte para uma das áreas.
 3. Causa ou consequência? Dores ligadas por "porque" — "perco venda PORQUE não
    dou conta de responder" — classificam pela CAUSA: aqui, `atendimento`. Duas
    dores soltas, sem elo entre si, `indefinido`.
 
 Fronteiras: lead que não chega é marketing, lead que chegou e se perdeu é
-comercial. Repetição de responder gente é atendimento; de mexer em arquivo,
-sistema ou documento é operacional; de produzir conteúdo é marketing.
+comercial. Repetição de responder gente é atendimento.
+
+Atrito manual não decide sozinho — decide de QUE trabalho ele é:
+
+- Atrito em produzir ou distribuir conteúdo é `marketing`. Montar post, cortar
+  foto, escrever legenda, publicar: o trabalho é da função de marketing, por mais
+  braçal que seja.
+- Atrito em processar dado interno é `operacional`. Conferir guia, montar escala,
+  renomear laudo, digitar nota, consolidar relatório: nenhum dos outros três
+  agentes assume isso.
 
 `indefinido` é escolha, não desistência. Use sempre que não houver sinal claro:
 só o produto pedido, só pedido de informação, queixa sem mecanismo, saudação,

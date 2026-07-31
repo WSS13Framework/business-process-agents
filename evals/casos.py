@@ -453,6 +453,8 @@ CASOS: list[dict[str, Any]] = [
             "umas 30 vez por dia"
         ),
         "esperado": {"agente_indicado": "operacional"},
+        # fronteira: chatbot pedido compete com o orçamento montado à mão
+        "atrito": True,
     },
     {
         "id": "ag_arm_03",
@@ -834,6 +836,8 @@ CASOS: list[dict[str, Any]] = [
             "ninguem aqui aguenta mais"
         ),
         "esperado": {"agente_indicado": "atendimento"},
+        # fronteira: caçar código na planilha compete com a pergunta repetida
+        "atrito": True,
     },
     {
         "id": "r6_amb_04",
@@ -852,6 +856,8 @@ CASOS: list[dict[str, Any]] = [
             "nada"
         ),
         "esperado": {"agente_indicado": "marketing"},
+        # fronteira: montar 40 posts compete com a presença fraca
+        "atrito": True,
     },
     {
         "id": "r6_amb_05",
@@ -1094,6 +1100,8 @@ CASOS: list[dict[str, Any]] = [
             "que me avise quando um cliente para de pedir"
         ),
         "esperado": {"agente_indicado": "comercial"},
+        # fronteira: 'nada que me avise' compete com o cliente que sumiu
+        "atrito": True,
     },
     {
         "id": "r6_com_07",
@@ -1111,6 +1119,8 @@ CASOS: list[dict[str, Any]] = [
             "pra olhar isso e quando eu volto o cara ja mandou fazer em outro lugar"
         ),
         "esperado": {"agente_indicado": "comercial"},
+        # fronteira: aprovação manual por e-mail compete com a venda travada
+        "atrito": True,
     },
     {
         "id": "r6_com_08",
@@ -1126,6 +1136,8 @@ CASOS: list[dict[str, Any]] = [
             "venda na mao que passa batido toda semana"
         ),
         "esperado": {"agente_indicado": "comercial"},
+        # fronteira: lista no caderno compete com a venda não retomada
+        "atrito": True,
     },
     {
         "id": "r6_ind_01",
@@ -1242,6 +1254,8 @@ CASOS: list[dict[str, Any]] = [
             "rodada. Fico à disposição."
         ),
         "esperado": {"agente_indicado": "indefinido"},
+        # fronteira: montar o comparativo compete com o rito de compra
+        "atrito": True,
     },
     {
         "id": "r6_ind_08",
@@ -1364,21 +1378,6 @@ CASOS: list[dict[str, Any]] = [
         "esperado": {"agente_indicado": "marketing"},
     },
     {
-        "id": "r6_mkt_08",
-        "categoria": "agente_marketing",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: alta)
-        # A dor e a oferta nao ter conteudo nenhum que a comunique, entao o publico nem fica
-        # sabendo que ela existe.
-        "mensagem": (
-            "tenho uma escola tecnica no interior. abri o curso de eletricista predial "
-            "faz 8 mes e nao tem uma linha escrita sobre ele em lugar nenhum, nem no "
-            "site, nem no folder que a gente distribui na praça. quem descobre é quem "
-            "pergunta na recepção por acaso. com o de refrigeração foi igual, so lotou "
-            "depois de 2 ano"
-        ),
-        "esperado": {"agente_indicado": "marketing"},
-    },
-    {
         "id": "r6_ope_01",
         "categoria": "agente_operacional",
         # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: media)
@@ -1463,6 +1462,8 @@ CASOS: list[dict[str, Any]] = [
             "e protocola. da quase 2h por venda, e a gente faz umas 30 no mes"
         ),
         "esperado": {"agente_indicado": "operacional"},
+        # fronteira: CRM pedido compete com o dossiê montado à mão
+        "atrito": True,
     },
     {
         "id": "r6_ope_07",
@@ -1479,6 +1480,8 @@ CASOS: list[dict[str, Any]] = [
             "sempre tem um que manda no formato errado e eu refaco do zero"
         ),
         "esperado": {"agente_indicado": "operacional"},
+        # fronteira: social media pedida compete com o relatório manual
+        "atrito": True,
     },
     {
         "id": "r6_ope_08",

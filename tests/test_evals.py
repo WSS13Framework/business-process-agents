@@ -21,6 +21,7 @@ from evals.comparar import (
     comparar,
     resumir,
     taxa_por_campo,
+    taxa_por_fronteira,
 )
 
 RESUMO_BOM = "Quero vídeo institucional para minha clínica até outubro."
@@ -197,3 +198,42 @@ def test_taxa_por_campo_ignora_caso_que_deu_erro():
     ]
 
     assert taxa_por_campo(resultados) == {}
+
+
+# ---- taxa_por_fronteira (duas taxas, nao uma) ----
+def test_fronteira_separa_atrito_dos_demais():
+    resultados = [
+        {"esperado": {"agente_indicado": "x"}, "atrito": True,
+         "divergencias": [{"campo": "agente_indicado", "esperado": "x", "devolvido": "y"}],
+         "erro": None},
+        {"esperado": {"agente_indicado": "x"}, "divergencias": [], "erro": None},
+        {"esperado": {"agente_indicado": "x"}, "divergencias": [], "erro": None},
+    ]
+
+    f = taxa_por_fronteira(resultados)
+
+    assert f["atrito"]["agente_indicado"]["taxa"] == 0.0
+    assert f["demais"]["agente_indicado"]["taxa"] == 1.0
+
+
+def test_fronteira_mostra_o_que_o_total_esconde():
+    """O total daria 67% e pareceria só ruído. Separado, o atrito está em 0%."""
+    resultados = [
+        {"esperado": {"agente_indicado": "x"}, "atrito": True,
+         "divergencias": [{"campo": "agente_indicado", "esperado": "x", "devolvido": "y"}],
+         "erro": None},
+        {"esperado": {"agente_indicado": "x"}, "divergencias": [], "erro": None},
+        {"esperado": {"agente_indicado": "x"}, "divergencias": [], "erro": None},
+    ]
+
+    total = taxa_por_campo(resultados)["agente_indicado"]["taxa"]
+    atrito = taxa_por_fronteira(resultados)["atrito"]["agente_indicado"]["taxa"]
+
+    assert round(total, 2) == 0.67
+    assert atrito == 0.0
+
+
+def test_fronteira_sem_caso_de_atrito_devolve_grupo_vazio():
+    resultados = [{"esperado": {"autoridade": True}, "divergencias": [], "erro": None}]
+
+    assert taxa_por_fronteira(resultados)["atrito"] == {}
