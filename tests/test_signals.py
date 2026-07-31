@@ -14,12 +14,39 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 import anthropic
 
 from agents.lead_triage.agent import PESOS_SINAIS, LeadTriageAgent
-from agents.lead_triage.signals import MensagemEnricher, pontuar_sinais
+from agents.lead_triage.signals import (
+    AGENTES,
+    ESQUEMA_SINAIS,
+    MensagemEnricher,
+    pontuar_sinais,
+)
 from tests.fakes import COMPRADOR, NEUTRO, SAINDO, ClienteFalso, RespostaFalsa, cliente_com
 
 
 def fonte(sinais: dict | None = None) -> MensagemEnricher:
     return MensagemEnricher(cliente=cliente_com(sinais))
+
+
+# ---- invariantes do schema ----
+def test_todo_campo_do_schema_esta_em_required():
+    """
+    Strict mode da OpenAI rejeita schema com campo em properties fora de required.
+    O erro só apareceria numa chamada real — este teste antecipa.
+    """
+    assert set(ESQUEMA_SINAIS["properties"]) == set(ESQUEMA_SINAIS["required"])
+
+
+def test_schema_proibe_campo_extra():
+    assert ESQUEMA_SINAIS["additionalProperties"] is False
+
+
+def test_catalogo_de_agentes_esta_no_enum():
+    assert ESQUEMA_SINAIS["properties"]["agente_indicado"]["enum"] == list(AGENTES)
+
+
+def test_indefinido_e_uma_opcao_valida():
+    """Sem 'indefinido' no catálogo, o modelo é forçado a chutar um agente."""
+    assert "indefinido" in AGENTES
 
 
 # ---- MensagemEnricher ----

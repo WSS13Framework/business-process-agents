@@ -11,7 +11,13 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 import openai
 
 from agents.lead_triage.agent import PESOS_SINAIS
-from agents.lead_triage.signals import ESQUEMA_SINAIS, INSTRUCAO, MensagemEnricher, pontuar_sinais
+from agents.lead_triage.signals import (
+    AGENTES,
+    ESQUEMA_SINAIS,
+    INSTRUCAO,
+    MensagemEnricher,
+    pontuar_sinais,
+)
 from core.base_enricher import enriquecer
 from enrichers.mensagem_openai import MensagemEnricherOpenAI
 from tests.fakes import (
@@ -95,6 +101,17 @@ def test_usa_structured_outputs_estrito():
     assert formato["json_schema"]["strict"] is True
     # strict exige additionalProperties false e todos os campos em required.
     assert formato["json_schema"]["schema"]["additionalProperties"] is False
+
+
+def test_o_catalogo_de_agentes_chega_no_pedido():
+    """O enum viaja até a API: o modelo não consegue inventar um agente."""
+    cliente = ClienteOpenAIFalso(RespostaOpenAIFalsa(NEUTRO))
+    MensagemEnricherOpenAI(cliente=cliente).buscar("oi")
+
+    schema = cliente.chamadas[0]["response_format"]["json_schema"]["schema"]
+
+    assert schema["properties"]["agente_indicado"]["enum"] == list(AGENTES)
+    assert "agente_indicado" in schema["required"]
 
 
 def test_manda_a_mesma_instrucao_da_anthropic():

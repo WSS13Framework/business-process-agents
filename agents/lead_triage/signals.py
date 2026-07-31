@@ -78,6 +78,77 @@ conteúdo — não invente intenção e não descreva a mensagem de fora
 ("Mensagem sem intenção comercial"). Escreva, ainda em primeira pessoa, o que a
 pessoa fez: "Entrei em contato sem dizer o que preciso."
 
+# Critérios do Agente Indicado
+
+`agente_indicado` = qual time resolve a DOR descrita. Não é o time que entrega o
+produto pedido.
+
+Como decidir, nesta ordem:
+
+1. Ache na mensagem a oração que diz o que está dando errado HOJE: o que a pessoa
+   perde, o que ela refaz na mão, o que ela não dá conta.
+2. Descarte a oração que diz o que ela quer comprar. "Quero um vídeo", "preciso
+   de um site", "queria um chatbot" nomeiam produto, nunca dor.
+3. Se a oração do passo 1 não existir, `indefinido`. Não escolha a categoria mais
+   provável.
+
+Mesmo produto, dor diferente, time diferente:
+
+- "quero um vídeo, ninguém aqui conhece minha loja" → marketing
+- "quero um vídeo, mando proposta e esqueço de cobrar resposta" → comercial
+
+Resultado ruim não é dor. "Minhas vendas caíram", "tenho pouco cliente",
+"faturamento baixo" dizem o placar, não onde quebra. Classifique só quando o
+texto disser o mecanismo:
+
+- "minhas vendas caíram" → indefinido
+- "minhas vendas caíram, ninguém responde os orçamentos" → comercial
+
+Ausência declarada é dor; desejo declarado é produto:
+
+- "não tenho conteúdo nenhum postado" → marketing (ausência)
+- "preciso de conteúdo pro Instagram" → indefinido (desejo)
+
+Critério de cada categoria:
+
+- `atendimento`: a dor está no trato com quem já escreveu para a empresa.
+  Mensagem sem resposta, fila que cresce, mesma dúvida o dia inteiro, ninguém
+  no fim de semana. O que se perde é a conversa.
+- `comercial`: a dor está na oportunidade que existia e não virou venda. Proposta
+  que não saiu, follow-up que ninguém fez, negociação que esfriou sem ninguém
+  notar, cliente que fechou com o concorrente. O que se perde é a venda.
+- `marketing`: a dor está em não ser encontrado ou não ter o que mostrar. Não tem
+  conteúdo, perfil parado, ninguém conhece, só cresce por indicação. A falha é
+  anterior ao contato: o lead nem chega.
+- `operacional`: a dor está em trabalho repetitivo que não é conversa. Preencher
+  planilha, montar documento na mão, copiar dado entre sistemas, refazer o mesmo
+  relatório toda semana.
+
+Fronteiras:
+
+- `atendimento` × `comercial`: quando as duas aparecem ligadas por causa ("perco
+  venda PORQUE não dou conta de responder"), classifique a CAUSA — aqui,
+  `atendimento`. Quando aparecem soltas, sem elo, `indefinido`.
+- `marketing` × `comercial`: lead que não chega é marketing; lead que chegou e se
+  perdeu é comercial.
+- `operacional` × `atendimento`: se o que se repete é responder gente, é
+  atendimento; se é mexer em arquivo, sistema ou documento, é operacional.
+- `operacional` × `marketing`: se a repetição é produzir ou publicar conteúdo, é
+  marketing; se é tarefa administrativa, é operacional.
+
+Marque `indefinido` quando a mensagem, por mais longa que seja:
+
+- Só nomeia o produto que quer, sem dizer o que está ruim hoje.
+- Só pede informação: preço, prazo, portfólio, "como funciona".
+- Traz queixa sem mecanismo: "quero crescer", "está desorganizado", "quero
+  vender mais". Nome de área não é dor.
+- É saudação, spam ou texto sem conteúdo.
+- Traz duas dores de times diferentes sem elo de causa entre elas.
+
+Não entram na decisão: o produto pedido, os outros campos deste schema, o ramo do
+negócio (clínica não é `atendimento`, loja não é `comercial`) e o canal citado
+(WhatsApp e Instagram são onde a dor aparece, não qual ela é).
+
 # Campos de Saída
 
 - `orcamento` (boolean): a pessoa citou um valor, uma verba, uma faixa de preço
@@ -88,6 +159,8 @@ pessoa fez: "Entrei em contato sem dizer o que preciso."
 - `autoridade` (boolean): conforme "Critérios de Autoridade".
 - `descadastro` (boolean): pediu para sair, parar de receber ou declarou não ter
   interesse.
+- `agente_indicado` (string): um entre `comercial`, `atendimento`, `marketing`,
+  `operacional` ou `indefinido`, conforme "Critérios do Agente Indicado".
 - `resumo` (string): conforme "Critérios do Resumo".
 
 # Exemplos Positivos
@@ -100,6 +173,12 @@ pessoa fez: "Entrei em contato sem dizer o que preciso."
 → orcamento false, urgencia false, autoridade true, descadastro false
 → resumo: "Preciso de proposta para a rede onde faço as compras."
 
+"quero um vídeo, o povo pergunta preço no direct e eu não dou conta de responder"
+→ agente_indicado atendimento (a dor é o volume de mensagem; o vídeo é o produto)
+
+"emito nota e contrato na mão pra cada cliente novo, queria um site"
+→ agente_indicado operacional (a dor é o documento repetitivo; o site é o produto)
+
 # Exemplos Negativos
 
 "sou analista de marketing na Acme, meu chefe pediu pra pesquisar preços"
@@ -109,7 +188,18 @@ pessoa fez: "Entrei em contato sem dizer o que preciso."
 → autoridade false (fala por terceiros)
 
 "faço TCC sobre marketing digital, pode me explicar como funciona?"
-→ autoridade false (estudante)"""
+→ autoridade false (estudante)
+
+"tenho uma clínica em Botafogo, quero vídeo institucional, até 8 mil, pra outubro"
+→ agente_indicado indefinido (verba e prazo não são dor; nenhuma falha descrita)
+
+"quero contratar um chatbot de atendimento pro meu site"
+→ agente_indicado indefinido (nomeou produto da área de atendimento, sem dor)"""
+
+# Catálogo de agentes para onde o lead pode ser encaminhado. 'indefinido' é
+# resposta legítima, não buraco: encaminhar errado custa mais que não encaminhar.
+# 'indefinido' is a legitimate answer, not a gap.
+AGENTES = ("comercial", "atendimento", "marketing", "operacional", "indefinido")
 
 ESQUEMA_SINAIS: dict[str, Any] = {
     "type": "object",
@@ -118,9 +208,21 @@ ESQUEMA_SINAIS: dict[str, Any] = {
         "urgencia": {"type": "boolean"},
         "autoridade": {"type": "boolean"},
         "descadastro": {"type": "boolean"},
+        # enum fecha a porta no nível da API: o modelo não consegue devolver um
+        # agente que não existe. Validar depois seria tarde.
+        # The enum closes the door at the API level.
+        "agente_indicado": {"type": "string", "enum": list(AGENTES)},
         "resumo": {"type": "string"},
     },
-    "required": ["orcamento", "urgencia", "autoridade", "descadastro", "resumo"],
+    # Strict mode da OpenAI exige TODO campo de properties aqui dentro.
+    "required": [
+        "orcamento",
+        "urgencia",
+        "autoridade",
+        "descadastro",
+        "agente_indicado",
+        "resumo",
+    ],
     "additionalProperties": False,
 }
 

@@ -13,6 +13,7 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+from agents.lead_triage.signals import AGENTES
 from evals.casos import CASOS, CATEGORIAS
 from evals.comparar import MAX_PALAVRAS_RESUMO, checar_resumo, comparar, resumir
 
@@ -35,14 +36,18 @@ def test_toda_categoria_declarada_tem_caso():
 
 
 def test_todo_caso_esta_bem_formado():
-    campos_validos = {"orcamento", "urgencia", "autoridade", "descadastro"}
+    booleanos = {"orcamento", "urgencia", "autoridade", "descadastro"}
 
     for c in CASOS:
         assert c["mensagem"].strip(), f"{c['id']}: mensagem vazia"
         assert c["esperado"], f"{c['id']}: gabarito vazio não testa nada"
         for campo, valor in c["esperado"].items():
-            assert campo in campos_validos, f"{c['id']}: campo {campo!r} não existe"
-            assert isinstance(valor, bool), f"{c['id']}: {campo} deveria ser bool"
+            if campo in booleanos:
+                assert isinstance(valor, bool), f"{c['id']}: {campo} deveria ser bool"
+            elif campo == "agente_indicado":
+                assert valor in AGENTES, f"{c['id']}: agente {valor!r} fora do catálogo"
+            else:
+                raise AssertionError(f"{c['id']}: campo {campo!r} não existe")
 
 
 def test_autoridade_tem_os_dois_lados():

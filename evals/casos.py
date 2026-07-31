@@ -29,6 +29,12 @@ CATEGORIAS = {
     "ambigua": "evidência insuficiente ou contraditória",
     "descadastro": "pede para sair",
     "sinais_combinados": "autoridade junto com orçamento/urgência",
+    "agente_comercial": "dor de oportunidade perdida",
+    "agente_atendimento": "dor no trato com quem já escreveu",
+    "agente_marketing": "dor de não ser encontrado ou não ter o que mostrar",
+    "agente_operacional": "dor de trabalho repetitivo que não é conversa",
+    "agente_indefinido": "sem mecanismo de dor descrito — não chutar",
+    "agente_armadilha": "produto aponta pra um time, dor aponta pra outro",
 }
 
 CASOS: list[dict[str, Any]] = [
@@ -421,5 +427,357 @@ CASOS: list[dict[str, Any]] = [
         "categoria": "sinais_combinados",
         "mensagem": "sou analista aqui, temos 30 mil aprovados pra esse projeto",
         "esperado": {"autoridade": False, "orcamento": True},
+    },
+    # ---- agente_indicado: quem manda é a dor descrita, não o produto pedido ----
+    {
+        "id": "ag_arm_01",
+        "categoria": "agente_armadilha",
+        # O produto pedido e midia paga, mas a dor descrita e perda por demora no retorno ao lead,
+        # que e comercial.
+        "mensagem": (
+            "queria contratar trafego pago pra chegar mais lead. na verdade lead ja chega "
+            "uns 40 por mes do google, o problema e que meu vendedor liga 3 dia depois e o "
+            "cara ja fechou com o concorrente"
+        ),
+        "esperado": {"agente_indicado": "comercial"},
+    },
+    {
+        "id": "ag_arm_02",
+        "categoria": "agente_armadilha",
+        # O produto pedido aponta atendimento, mas a dor descrita e documento repetitivo montado a
+        # mao, que e operacional.
+        "mensagem": (
+            "queria um robo pra atender os cliente no whats. o que mata mesmo aqui e que "
+            "pra cada pedido eu monto o orçamento na mao no word, copiando preco da tabela, "
+            "umas 30 vez por dia"
+        ),
+        "esperado": {"agente_indicado": "operacional"},
+    },
+    {
+        "id": "ag_arm_03",
+        "categoria": "agente_armadilha",
+        # O produto pedido e ferramenta de vendas, mas a dor e ausencia total de demanda entrante
+        # por desconhecimento da marca.
+        "mensagem": (
+            "me indicaram um crm pra organizar o funil de vendas. so que funil nao tem, faz "
+            "uns 4 mes que nao entra um contato novo aqui, ninguem na regiao conhece a "
+            "marca"
+        ),
+        "esperado": {"agente_indicado": "marketing"},
+    },
+    {
+        "id": "ag_arm_04",
+        "categoria": "agente_armadilha",
+        # O produto pedido e social media, mas a dor e volume de mensagens sem resposta, que e
+        # atendimento.
+        "mensagem": (
+            "queria contratar alguem pra cuidar das redes sociais da loja. seguidor a gente "
+            "tem 20 mil, o buraco e que chega uns 100 direct por dia perguntando preco e "
+            "prazo e a gente responde uns 10"
+        ),
+        "esperado": {"agente_indicado": "atendimento"},
+    },
+    {
+        "id": "ag_arm_05",
+        "categoria": "agente_armadilha",
+        # Ha produto pedido com nome de area, mas nenhuma dor descrita, entao rotular como
+        # atendimento seria inferir do produto.
+        "mensagem": (
+            "quero contratar um chatbot de atendimento pro meu site, igual aquele que vi na "
+            "empresa do meu primo. me passa como funciona e quanto custa?"
+        ),
+        "esperado": {"agente_indicado": "indefinido"},
+    },
+    {
+        "id": "ag_arm_06",
+        "categoria": "agente_armadilha",
+        # produto pedido e operacional; a dor descrita e lead sem follow-up
+        "mensagem": (
+            "queria automatizar minha planilha de clientes. o problema real e que a "
+            "planilha tem 400 lead que pediram orcamento e ninguem nunca voltou pra eles"
+        ),
+        "esperado": {"agente_indicado": "comercial"},
+    },
+    {
+        "id": "ag_atd_01",
+        "categoria": "agente_atendimento",
+        # A dor e volume de mensagens repetidas sem resposta em tempo, que e sobrecarga de
+        # atendimento.
+        "mensagem": (
+            "tenho uma clinica de fisio, chega uns 80 whats por dia perguntando horario, "
+            "convenio e valor da sessão. a menina da recepção nao da conta e as vez "
+            "responde so no outro dia"
+        ),
+        "esperado": {"agente_indicado": "atendimento"},
+    },
+    {
+        "id": "ag_atd_02",
+        "categoria": "agente_atendimento",
+        # A dor e fila de mensagens recorrentes sem resposta, nao ausencia de publico ou de
+        # conteudo.
+        "mensagem": (
+            "meu direct ta com umas 3 semana de acumulo. eu abro, olho, fecho e nao "
+            "respondo pq e sempre a mesma pergunta e eu ja to cansado de digitar a mesma "
+            "coisa"
+        ),
+        "esperado": {"agente_indicado": "atendimento"},
+    },
+    {
+        "id": "ag_atd_03",
+        "categoria": "agente_atendimento",
+        # A dor e o cliente ja comprado ficando sem resposta, o que e suporte e nao venda.
+        "mensagem": (
+            "vendemos equipamento de cozinha industrial e o pos venda ta um caos. cliente "
+            "manda duvida de uso e a gente leva 2 dia pra retornar, ja apareceu reclamação "
+            "no google por causa disso"
+        ),
+        "esperado": {"agente_indicado": "atendimento"},
+    },
+    {
+        "id": "ag_atd_04",
+        "categoria": "agente_atendimento",
+        # A dor e janela de silencio e acumulo de mensagens, um problema de cobertura de
+        # atendimento.
+        "mensagem": (
+            "sabado e domingo nao tem ninguem aqui pra responder nada, ai na segunda tem "
+            "umas 200 mensagem esperando. o pessoal ja fala que a gente some no fim de "
+            "semana"
+        ),
+        "esperado": {"agente_indicado": "atendimento"},
+    },
+    {
+        "id": "ag_atd_05",
+        "categoria": "agente_atendimento",
+        # A dor e a demanda de resposta durante o pedido em curso, tipica de atendimento e nao de
+        # processo interno.
+        "mensagem": (
+            "delivery aqui e por whats mesmo. o cliente manda o pedido, depois pergunta se "
+            "ja saiu, ninguem responde pq ta todo mundo na cozinha, ai ele liga irritado no "
+            "meio do movimento"
+        ),
+        "esperado": {"agente_indicado": "atendimento"},
+    },
+    {
+        "id": "ag_com_01",
+        "categoria": "agente_comercial",
+        # a dor e o follow-up que ninguem fez, nao o tempo de produzir a proposta
+        "mensagem": (
+            "tenho uma revenda de maquina de corte. mando a proposta na sexta e so lembro "
+            "de cobrar resposta uma semana depois. quando ligo o cara ja comprou de outro"
+        ),
+        "esperado": {"agente_indicado": "comercial"},
+    },
+    {
+        "id": "ag_com_02",
+        "categoria": "agente_comercial",
+        # A dor e o abandono do lead depois do interesse demonstrado, ou seja, perda por falta de
+        # acompanhamento comercial.
+        "mensagem": (
+            "sou dona de imobiliaria. a pessoa visita o imovel, gosta, e depois disso "
+            "ninguem liga de volta pra ela. mes passado escapou dois negocio desse jeito"
+        ),
+        "esperado": {"agente_indicado": "comercial"},
+    },
+    {
+        "id": "ag_com_03",
+        "categoria": "agente_comercial",
+        # A dor e negociacao aberta esfriando sem que ninguem note, que e perda de oportunidade em
+        # andamento.
+        "mensagem": (
+            "montei um time de 3 pra prospectar e ninguem sabe me dizer em que pe ta cada "
+            "negociação. tem cliente que sumiu faz uns 2 mes e ninguem percebeu que ele "
+            "tinha sumido"
+        ),
+        "esperado": {"agente_indicado": "comercial"},
+    },
+    {
+        "id": "ag_com_04",
+        "categoria": "agente_comercial",
+        # A dor e a negociacao interrompida na objeacao de preco sem retomada, que e trabalho de
+        # reengajamento comercial.
+        "mensagem": (
+            "quando o cliente fala que ta caro a conversa morre ali e ninguem volta a falar "
+            "com ele nunca mais. deve ter uns 200 parado desse jeito no meu caderno"
+        ),
+        "esperado": {"agente_indicado": "comercial"},
+    },
+    {
+        "id": "ag_com_05",
+        "categoria": "agente_comercial",
+        # A dor esta no avanco da venda ate o fechamento, e o proprio lead descarta atendimento
+        # como problema.
+        "mensagem": (
+            "a gente atende bem, responde rapido, o pessoal elogia. so que na hora de puxar "
+            "pro fechamento ninguem puxa, fica todo mundo esperando o cliente decidir "
+            "sozinho"
+        ),
+        "esperado": {"agente_indicado": "comercial"},
+    },
+    {
+        "id": "ag_ind_01",
+        "categoria": "agente_indefinido",
+        # Ha interesse declarado mas nenhuma dor descrita, entao qualquer rotulo seria chute.
+        "mensagem": (
+            "boa tarde! vi o trabalho de voces pelo linkedin de um amigo e achei bem "
+            "interessante o que faz. queria entender melhor como funciona pra ver se faz "
+            "sentido pra gente aqui"
+        ),
+        "esperado": {"agente_indicado": "indefinido"},
+    },
+    {
+        "id": "ag_ind_02",
+        "categoria": "agente_indefinido",
+        # Formulario preenchido com pedido generico de informacao, sem nenhum problema descrito.
+        "mensagem": (
+            "Nome: Ricardo Alves / Empresa: RC Distribuidora de Bebidas / Mensagem: "
+            "gostaria de receber mais informações sobre os serviços prestados e a tabela de "
+            "valores. Atenciosamente"
+        ),
+        "esperado": {"agente_indicado": "indefinido"},
+    },
+    {
+        "id": "ag_ind_03",
+        "categoria": "agente_indefinido",
+        # Sem operacao rodando nao existe dor concreta descrita, so intencao preventiva vaga.
+        "mensagem": (
+            "to abrindo uma empresa de importação, ainda nao comecei a operar. quero ja "
+            "deixar tudo redondo desde o comeco pra nao ter dor de cabeca depois. como "
+            "voces trabalham?"
+        ),
+        "esperado": {"agente_indicado": "indefinido"},
+    },
+    {
+        "id": "ag_ind_04",
+        "categoria": "agente_indefinido",
+        # O contato e por indicacao de terceiro e o proprio lead nao sabe qual e o problema, entao
+        # nao ha sinal.
+        "mensagem": (
+            "meu socio falou que voces resolveram um problema serio na empresa do primo "
+            "dele e mandou eu chamar aqui. sinceramente eu nem sei direito o que voces "
+            "fazem, ele que entende disso"
+        ),
+        "esperado": {"agente_indicado": "indefinido"},
+    },
+    {
+        "id": "ag_ind_05",
+        "categoria": "agente_indefinido",
+        # Desorganizacao generica nao aponta area nenhuma; falta o fato concreto que sustentaria
+        # um rotulo.
+        "mensagem": (
+            "a gente cresceu bastante nos ultimo 2 ano e ficou tudo meio desorganizado, "
+            "sinto que da pra melhorar muita coisa. voces conseguem me ajudar nisso?"
+        ),
+        "esperado": {"agente_indicado": "indefinido"},
+    },
+    {
+        "id": "ag_mkt_01",
+        "categoria": "agente_marketing",
+        # A dor e ausencia de gente nova chegando por desconhecimento da marca, ou seja, falta de
+        # presenca e conteudo.
+        "mensagem": (
+            "tenho um petshop no bairro ha 6 anos e gente que mora a 3 quadra daqui nao "
+            "sabe que existe. so entra cliente antigo, novo mesmo nao aparece"
+        ),
+        "esperado": {"agente_indicado": "marketing"},
+    },
+    {
+        "id": "ag_mkt_02",
+        "categoria": "agente_marketing",
+        # A dor e a producao de conteudo parada secando a entrada de contatos, causa tipicamente
+        # de marketing.
+        "mensagem": (
+            "a gente parou de postar em fevereiro porque ninguem aqui tem tempo de sentar e "
+            "produzir. de la pra ca nao chegou mais nenhum contato novo, so os de sempre"
+        ),
+        "esperado": {"agente_indicado": "marketing"},
+    },
+    {
+        "id": "ag_mkt_03",
+        "categoria": "agente_marketing",
+        # A dor e a dependencia de boca a boca sem canal proprio de atracao, que e geracao de
+        # demanda.
+        "mensagem": (
+            "meu escritorio de contabilidade so cresce por indicação. quando a indicação "
+            "seca o mes morre, pq nao tem nada trazendo gente de fora pra dentro"
+        ),
+        "esperado": {"agente_indicado": "marketing"},
+    },
+    {
+        "id": "ag_mkt_04",
+        "categoria": "agente_marketing",
+        # A dor e falta de reconhecimento em praca nova, resolvida por posicionamento e
+        # divulgacao.
+        "mensagem": (
+            "abri a segunda unidade em outra cidade e la ninguem me conhece. na primeira "
+            "era 10 ano de boca a boca, aqui to comecando do zero e o salão fica vazio de "
+            "terça"
+        ),
+        "esperado": {"agente_indicado": "marketing"},
+    },
+    {
+        "id": "ag_mkt_05",
+        "categoria": "agente_marketing",
+        # A dor e mensagem e conteudo que nao comunicam a oferta, nao volume de atendimento nem
+        # processo interno.
+        "mensagem": (
+            "a gente ate tem foto boa dos produto, mas ninguem escreve nada junto. quem cai "
+            "na pagina olha e vai embora sem entender o que a gente faz de verdade"
+        ),
+        "esperado": {"agente_indicado": "marketing"},
+    },
+    {
+        "id": "ag_ope_01",
+        "categoria": "agente_operacional",
+        # A dor e tarefa repetitiva de transporte de dados feita a mao, sem envolver lead ou
+        # cliente.
+        "mensagem": (
+            "toda segunda eu gasto umas 4h copiando as venda do sistema pra uma planilha "
+            "pra mandar pro contador. e sempre a mesma coisa, todo santo mes"
+        ),
+        "esperado": {"agente_indicado": "operacional"},
+    },
+    {
+        "id": "ag_ope_02",
+        "categoria": "agente_operacional",
+        # A dor e documento manual repetido com erro de digitacao, um gargalo de processo interno.
+        "mensagem": (
+            "meu juridico monta contrato um por um, muda so nome, cpf e valor. mes passado "
+            "foi cpf trocado em dois e deu retrabalho pra caramba"
+        ),
+        "esperado": {"agente_indicado": "operacional"},
+    },
+    {
+        "id": "ag_ope_03",
+        "categoria": "agente_operacional",
+        # A dor e montagem manual de documento consolidando fontes, tarefa operacional repetitiva.
+        "mensagem": (
+            "cada obra gera um relatorio que a engenheira monta na mao, juntando foto que "
+            "chega no zap com a planilha de medição. leva o dia inteiro dela e ela deveria "
+            "ta em campo"
+        ),
+        "esperado": {"agente_indicado": "operacional"},
+    },
+    {
+        "id": "ag_ope_04",
+        "categoria": "agente_operacional",
+        # A dor e digitacao manual de documento em sistema, com erro decorrente do proprio
+        # processo.
+        "mensagem": (
+            "recebo nota em pdf de uns 40 fornecedor por mes e alguem daqui digita item por "
+            "item no erp. ja aconteceu de lançar quantidade errada e a gente so descobrir "
+            "no inventario"
+        ),
+        "esperado": {"agente_indicado": "operacional"},
+    },
+    {
+        "id": "ag_ope_05",
+        "categoria": "agente_operacional",
+        # A dor e retrabalho de cadastro duplicado entre sistemas, nao a venda em si que ja foi
+        # fechada.
+        "mensagem": (
+            "toda vez que fecha um contrato alguem tem que cadastrar o mesmo cliente em 3 "
+            "lugar diferente, e sempre esquecem um. dai o financeiro cobra errado"
+        ),
+        "esperado": {"agente_indicado": "operacional"},
     },
 ]

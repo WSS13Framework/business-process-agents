@@ -92,6 +92,7 @@ COMPRADOR = {
     "urgencia": True,
     "autoridade": False,
     "descadastro": False,
+    "agente_indicado": "comercial",
     "resumo": "quer fechar identidade visual esta semana",
 }
 SAINDO = {
@@ -99,6 +100,7 @@ SAINDO = {
     "urgencia": False,
     "autoridade": False,
     "descadastro": True,
+    "agente_indicado": "indefinido",
     "resumo": "pediu para sair da lista",
 }
 NEUTRO = {
@@ -106,6 +108,7 @@ NEUTRO = {
     "urgencia": False,
     "autoridade": False,
     "descadastro": False,
+    "agente_indicado": "indefinido",
     "resumo": "só perguntou o que a empresa faz",
 }
 
