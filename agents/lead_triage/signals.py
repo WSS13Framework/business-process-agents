@@ -123,6 +123,11 @@ Atrito manual não decide sozinho — decide de QUE trabalho ele é:
 - Atrito em processar dado interno é `operacional`. Conferir guia, montar escala,
   renomear laudo, digitar nota, consolidar relatório: nenhum dos outros três
   agentes assume isso.
+- Atrito braçal que só existe porque alguém perguntou é `atendimento`, ainda que o
+  trabalho seja consultar sistema ou planilha. O teste: a tarefa desapareceria se
+  ninguém tivesse escrito? Se sim, é `atendimento`. Se ela aconteceria de qualquer
+  jeito — a escala da fábrica, o laudo do laboratório, o fechamento do mês — é
+  `operacional`.
 
 `indefinido` é escolha, não desistência. Use sempre que não houver sinal claro:
 só o produto pedido, só pedido de informação, queixa sem mecanismo, saudação,

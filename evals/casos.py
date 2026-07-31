@@ -981,22 +981,6 @@ CASOS: list[dict[str, Any]] = [
         "esperado": {"agente_indicado": "atendimento"},
     },
     {
-        "id": "r6_atd_07",
-        "categoria": "agente_atendimento",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: alta)
-        # critica: repete ag_atd_01 quase palavra por palavra
-        # A dor descrita e o volume de duvidas de aluno sem resposta, enquanto a planilha
-        # aparece so como produto desejado, sem trabalho manual descrito.
-        "mensagem": (
-            "queria um sistema pra automatizar a planilha de controle de mensalidade da "
-            "academia. mas te falar o que ta pegando fogo mesmo e o whats da recepção: "
-            "aluno pergunta horario da aula de spinning, se tem vaga, como tranca o "
-            "plano, sai umas 60 por dia e a menina responde quando da. tem mensagem de "
-            "terça que ate hoje ninguem abriu"
-        ),
-        "esperado": {"agente_indicado": "atendimento"},
-    },
-    {
         "id": "r6_atd_08",
         "categoria": "agente_atendimento",
         # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: media)
@@ -1070,41 +1054,9 @@ CASOS: list[dict[str, Any]] = [
         "esperado": {"agente_indicado": "comercial"},
     },
     {
-        "id": "r6_com_05",
-        "categoria": "agente_comercial",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: alta)
-        # critica: terceira variacao do mesmo mecanismo do lote (ver r6_com_04, r6_com_08)
-        # A dor e o lead que pediu retorno em data futura e nunca e recontatado, uma
-        # oportunidade combinada que se perde por falta de acompanhamento.
-        "mensagem": (
-            "escola de ingles aqui. metade de quem pede informação fala assim: 'me chama "
-            "em janeiro que ai eu fecho'. ai janeiro chega, a gente abre turma nova e "
-            "ninguem lembra de chamar essa gente, a anotação fica num papel na mesa da "
-            "coordenadora e some. ano passado devia ter uns 60 nome nessa situação e acho "
-            "que a gente chamou uns 5"
-        ),
-        "esperado": {"agente_indicado": "comercial"},
-    },
-    {
-        "id": "r6_com_06",
-        "categoria": "agente_comercial",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: alta)
-        # critica: repete ag_com_03; o lead nomeia a solucao, o que puxa leitura operacional
-        # A dor e o cliente recorrente que para de comprar sem ninguem perceber nem reagir,
-        # oportunidade de receita existente perdida em silencio.
-        "mensagem": (
-            "trabalho com distribuição de bebida pra bar e restaurante. semana passada "
-            "fui olhar o faturamento e descobri que 3 cliente que pediam toda quinta "
-            "feira pararam de comprar faz uns 3 mes e ninguem aqui tinha reparado. quando "
-            "liguei, um ja tava com outro fornecedor ha bastante tempo. nao existe nada "
-            "que me avise quando um cliente para de pedir"
-        ),
-        "esperado": {"agente_indicado": "comercial"},
-        # fronteira: 'nada que me avise' compete com o cliente que sumiu
-        "atrito": True,
-    },
-    {
         "id": "r6_com_07",
+        # ARBITRADO por Marcos: indefinido. O gargalo e a agenda do dono na
+        # aprovacao de desconto — nenhum dos quatro agentes resolve isso.
         "categoria": "agente_comercial",
         # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: media)
         # critica: gargalo de alcada nao e nenhum dos quatro mecanismos
@@ -1118,7 +1070,7 @@ CASOS: list[dict[str, Any]] = [
             "vendedor tem que me mandar por email pra eu aprovar, eu levo uns 3 ou 4 dia "
             "pra olhar isso e quando eu volto o cara ja mandou fazer em outro lugar"
         ),
-        "esperado": {"agente_indicado": "comercial"},
+        "esperado": {"agente_indicado": "indefinido"},
         # fronteira: aprovação manual por e-mail compete com a venda travada
         "atrito": True,
     },
@@ -1329,22 +1281,6 @@ CASOS: list[dict[str, Any]] = [
             "parei pra registrar nada. ai quando alguem pede indicação no grupo do "
             "predio, meus cliente antigo falam bem mas nao tem uma foto pra mandar, e eu "
             "tbm nao tenho. quem mostra trabalho pronto leva o serviço"
-        ),
-        "esperado": {"agente_indicado": "marketing"},
-    },
-    {
-        "id": "r6_mkt_05",
-        "categoria": "agente_marketing",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: media)
-        # critica: mecanismo identico a r6_amb_02
-        # A dor e a comunicacao nao dizer o que a clinica faz, atraindo publico errado e nao o
-        # certo; o robo e so o produto pedido.
-        "mensagem": (
-            "queria botar um robo de atendimento no whats da clinica veterinaria. chega "
-            "umas 15 mensagem por dia e mais de 10 é gente perguntando se faço banho e "
-            "tosa ou se vendo raçao, e a gente é clinica cirurgica, nao faz nada disso. "
-            "dono de bicho que precisa de cirurgia mesmo quase nao aparece, acho que "
-            "ninguem por aqui entende o que a gente faz"
         ),
         "esperado": {"agente_indicado": "marketing"},
     },
