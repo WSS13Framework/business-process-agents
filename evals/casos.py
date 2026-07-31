@@ -662,8 +662,9 @@ CASOS: list[dict[str, Any]] = [
     {
         "id": "ag_ind_05",
         "categoria": "agente_indefinido",
-        # Desorganizacao generica nao aponta area nenhuma; falta o fato concreto que sustentaria
-        # um rotulo.
+        # ARBITRADO por Marcos: indefinido reafirmado, mesmo o modelo tendo lido
+        # operacional numa rodada. Desorganizacao generica nao sustenta implantar
+        # nenhum dos quatro agentes.
         "mensagem": (
             "a gente cresceu bastante nos ultimo 2 ano e ficou tudo meio desorganizado, "
             "sinto que da pra melhorar muita coisa. voces conseguem me ajudar nisso?"
@@ -787,10 +788,9 @@ CASOS: list[dict[str, Any]] = [
     {
         "id": "r6_amb_01",
         "categoria": "agente_ambiguo",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: media)
-        # rotulo trocado: era 'atendimento'; lead entrante perdido por demora e comercial pela
+        # ARBITRADO por Marcos: atendimento. Reverte a minha troca — o agente que RESOLVE a dor
+        # e o de atendimento, ainda que a consequencia seja venda perdida.
         # regra
-        # critica: mesma estrutura de ag_arm_01
         # A dor descrita e mensagem que entra e fica sem resposta em tempo porque so uma pessoa
         # cobre o canal; a leitura comercial (lead perdido por demora) foi descartada porque nao
         # existe negociacao em andamento nem follow-up esquecido, a falha esta na primeira
@@ -800,7 +800,7 @@ CASOS: list[dict[str, Any]] = [
             "preço de lente e eu so vou responder quando fecha a loja, as vez so no outro "
             "dia. metade ja nem responde mais quando eu volto"
         ),
-        "esperado": {"agente_indicado": "comercial"},
+        "esperado": {"agente_indicado": "atendimento"},
     },
     {
         "id": "r6_amb_02",
@@ -821,9 +821,8 @@ CASOS: list[dict[str, Any]] = [
     {
         "id": "r6_amb_03",
         "categoria": "agente_ambiguo",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: baixa)
-        # rotulo trocado: era 'operacional'; 'mesma pergunta repetida' e atendimento pela regra
-        # critica: empate real entre atendimento e operacional
+        # ARBITRADO por Marcos: atendimento mantido. Quem resolve o rastreio repetido e o agente
+        # de atendimento.
         # A dor e a consulta manual recorrente em site e planilha que se repete a cada pedido; a
         # leitura de atendimento (mesma pergunta repetida, volume de mensagem) foi descartada
         # porque eles respondem todo mundo, o que trava e o trabalho de garimpar o dado, nao a
@@ -839,10 +838,9 @@ CASOS: list[dict[str, Any]] = [
     {
         "id": "r6_amb_04",
         "categoria": "agente_ambiguo",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: baixa)
-        # rotulo trocado: era 'operacional'; 'repeticao de produzir conteudo e marketing' pela
+        # ARBITRADO por Marcos: marketing mantido. Quem resolve a montagem de post e o agente de
+        # marketing.
         # regra
-        # critica: rotulo original contradizia a fronteira escrita na INSTRUCAO
         # A dor e a montagem manual repetitiva de pecas a partir de dado que ja existe no
         # sistema; a leitura de marketing (postagem inconsistente, presenca fraca) foi
         # descartada porque parar de postar e consequencia do gargalo manual, e a regra manda
@@ -858,7 +856,8 @@ CASOS: list[dict[str, Any]] = [
     {
         "id": "r6_amb_05",
         "categoria": "agente_ambiguo",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: media)
+        # ARBITRADO por Marcos: indefinido mantido. Placar comparado sem prejuizo nao sustenta
+        # implantar nenhum dos quatro.
         # O que ele traz e placar comparado com o concorrente e uma sensacao, sem nenhum
         # mecanismo de falha nem prejuizo descrito; a leitura de marketing (presenca digital
         # fraca) foi descartada porque numero de seguidor menor que o do vizinho e metrica, nao
@@ -1194,8 +1193,8 @@ CASOS: list[dict[str, Any]] = [
     {
         "id": "r6_ind_05",
         "categoria": "agente_indefinido",
-        # REVISAR — gabarito pendente de aprovacao humana (confianca do gerador: alta)
-        # critica: mesmo mecanismo de r6_ind_07
+        # ARBITRADO por Marcos: indefinido mantido. Nao descartado — r6_ind_07 testa outra
+        # armadilha (sinal comercial forte sem dor), nao a mesma.
         # É um checklist de qualificação de fornecedor (case, LGPD, integração, prazo) — pedido
         # de informação puro, sem nenhuma falha operacional descrita.
         "mensagem": (
