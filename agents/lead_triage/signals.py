@@ -80,70 +80,41 @@ pessoa fez: "Entrei em contato sem dizer o que preciso."
 
 # Critérios do Agente Indicado
 
-`agente_indicado` = qual time resolve a DOR descrita. Não é o time que entrega o
+`agente_indicado` = qual time resolve a DOR descrita. Nunca o time que entrega o
 produto pedido.
 
-Como decidir, nesta ordem:
+Ache na mensagem a oração que diz o que está dando errado hoje: o que a pessoa
+perde, o que ela refaz na mão, o que ela não dá conta. Se ela não existir,
+`indefinido`.
 
-1. Ache na mensagem a oração que diz o que está dando errado HOJE: o que a pessoa
-   perde, o que ela refaz na mão, o que ela não dá conta.
-2. Descarte a oração que diz o que ela quer comprar. "Quero um vídeo", "preciso
-   de um site", "queria um chatbot" nomeiam produto, nunca dor.
-3. Se a oração do passo 1 não existir, `indefinido`. Não escolha a categoria mais
-   provável.
+- `comercial`: lead perdido por demora, follow-up manual, sem controle de quem
+  está no funil, CRM desatualizado. O que se perde é a venda.
+- `atendimento`: volume de mensagens sem resposta, mesma pergunta repetida,
+  atendimento fora do horário. O que se perde é a conversa.
+- `marketing`: falta de conteúdo, presença digital fraca, campanha sem
+  consistência. A falha é anterior ao contato: o lead nem chega.
+- `operacional`: tarefa repetitiva, documento montado à mão, relatório manual,
+  pesquisa recorrente. Repetição que não é conversa.
 
-Mesmo produto, dor diferente, time diferente:
+Três testes, nesta ordem, antes de escolher:
 
-- "quero um vídeo, ninguém aqui conhece minha loja" → marketing
-- "quero um vídeo, mando proposta e esqueço de cobrar resposta" → comercial
+1. Produto ou dor? "Quero um vídeo", "preciso de um CRM" nomeiam produto —
+   descarte. Ausência declarada é dor ("não tenho conteúdo postado"); desejo
+   declarado é produto ("preciso de conteúdo").
+2. Placar ou mecanismo? "Vendas caíram", "pouco cliente", "faturamento baixo"
+   dizem o resultado, não onde quebra. Sem mecanismo, `indefinido`.
+3. Causa ou consequência? Dores ligadas por "porque" — "perco venda PORQUE não
+   dou conta de responder" — classificam pela CAUSA: aqui, `atendimento`. Duas
+   dores soltas, sem elo entre si, `indefinido`.
 
-Resultado ruim não é dor. "Minhas vendas caíram", "tenho pouco cliente",
-"faturamento baixo" dizem o placar, não onde quebra. Classifique só quando o
-texto disser o mecanismo:
+Fronteiras: lead que não chega é marketing, lead que chegou e se perdeu é
+comercial. Repetição de responder gente é atendimento; de mexer em arquivo,
+sistema ou documento é operacional; de produzir conteúdo é marketing.
 
-- "minhas vendas caíram" → indefinido
-- "minhas vendas caíram, ninguém responde os orçamentos" → comercial
-
-Ausência declarada é dor; desejo declarado é produto:
-
-- "não tenho conteúdo nenhum postado" → marketing (ausência)
-- "preciso de conteúdo pro Instagram" → indefinido (desejo)
-
-Critério de cada categoria:
-
-- `atendimento`: a dor está no trato com quem já escreveu para a empresa.
-  Mensagem sem resposta, fila que cresce, mesma dúvida o dia inteiro, ninguém
-  no fim de semana. O que se perde é a conversa.
-- `comercial`: a dor está na oportunidade que existia e não virou venda. Proposta
-  que não saiu, follow-up que ninguém fez, negociação que esfriou sem ninguém
-  notar, cliente que fechou com o concorrente. O que se perde é a venda.
-- `marketing`: a dor está em não ser encontrado ou não ter o que mostrar. Não tem
-  conteúdo, perfil parado, ninguém conhece, só cresce por indicação. A falha é
-  anterior ao contato: o lead nem chega.
-- `operacional`: a dor está em trabalho repetitivo que não é conversa. Preencher
-  planilha, montar documento na mão, copiar dado entre sistemas, refazer o mesmo
-  relatório toda semana.
-
-Fronteiras:
-
-- `atendimento` × `comercial`: quando as duas aparecem ligadas por causa ("perco
-  venda PORQUE não dou conta de responder"), classifique a CAUSA — aqui,
-  `atendimento`. Quando aparecem soltas, sem elo, `indefinido`.
-- `marketing` × `comercial`: lead que não chega é marketing; lead que chegou e se
-  perdeu é comercial.
-- `operacional` × `atendimento`: se o que se repete é responder gente, é
-  atendimento; se é mexer em arquivo, sistema ou documento, é operacional.
-- `operacional` × `marketing`: se a repetição é produzir ou publicar conteúdo, é
-  marketing; se é tarefa administrativa, é operacional.
-
-Marque `indefinido` quando a mensagem, por mais longa que seja:
-
-- Só nomeia o produto que quer, sem dizer o que está ruim hoje.
-- Só pede informação: preço, prazo, portfólio, "como funciona".
-- Traz queixa sem mecanismo: "quero crescer", "está desorganizado", "quero
-  vender mais". Nome de área não é dor.
-- É saudação, spam ou texto sem conteúdo.
-- Traz duas dores de times diferentes sem elo de causa entre elas.
+`indefinido` é escolha, não desistência. Use sempre que não houver sinal claro:
+só o produto pedido, só pedido de informação, queixa sem mecanismo, saudação,
+spam. Não escolha o mais provável entre os quatro — descobrir é melhor que
+inventar.
 
 Não entram na decisão: o produto pedido, os outros campos deste schema, o ramo do
 negócio (clínica não é `atendimento`, loja não é `comercial`) e o canal citado

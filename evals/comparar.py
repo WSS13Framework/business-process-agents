@@ -219,6 +219,40 @@ def comparar(caso: dict[str, Any], devolvido: dict[str, Any]) -> list[dict[str, 
     return divergencias
 
 
+def taxa_por_campo(resultados: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    """
+    Acerto por campo, medido só onde o gabarito cobra aquele campo.
+    Per-field accuracy, measured only where the answer key pins that field down.
+
+    Existe para o portão de regressão: uma taxa global esconde troca de erro entre
+    campos — melhorar 'agente_indicado' e piorar 'autoridade' pode dar o mesmo total.
+    A global rate hides one field improving while another regresses.
+    """
+    contagem: dict[str, dict[str, int]] = {}
+
+    def registrar(campo: str, acertou: bool) -> None:
+        c = contagem.setdefault(campo, {"certos": 0, "total": 0})
+        c["total"] += 1
+        c["certos"] += int(acertou)
+
+    for r in resultados:
+        if r.get("erro"):
+            continue
+
+        errados = {d["campo"] for d in r["divergencias"]}
+
+        for campo in r["esperado"]:
+            registrar(campo, campo not in errados)
+
+        # 'resumo' é cobrado em todo caso, não só quando o gabarito o declara.
+        registrar("resumo", "resumo" not in errados)
+
+    return {
+        campo: {**v, "taxa": v["certos"] / v["total"] if v["total"] else 0.0}
+        for campo, v in sorted(contagem.items())
+    }
+
+
 def resumir(resultados: list[dict[str, Any]]) -> dict[str, Any]:
     """Consolida a rodada: quantos passaram, quais campos mais erraram."""
     passaram = [r for r in resultados if not r["divergencias"] and not r.get("erro")]

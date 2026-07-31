@@ -15,7 +15,13 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from agents.lead_triage.signals import AGENTES
 from evals.casos import CASOS, CATEGORIAS
-from evals.comparar import MAX_PALAVRAS_RESUMO, checar_resumo, comparar, resumir
+from evals.comparar import (
+    MAX_PALAVRAS_RESUMO,
+    checar_resumo,
+    comparar,
+    resumir,
+    taxa_por_campo,
+)
 
 RESUMO_BOM = "Quero vídeo institucional para minha clínica até outubro."
 
@@ -149,3 +155,45 @@ def test_resumo_da_rodada_conta_certo():
     assert s["falharam"] == 2
     assert s["por_campo"] == {"autoridade": 1}
     assert s["por_categoria"]["gerente"] == 1
+
+
+# ---- taxa_por_campo (o portão de regressão) ----
+def test_taxa_por_campo_conta_so_onde_o_gabarito_cobra():
+    resultados = [
+        {"esperado": {"autoridade": True}, "divergencias": [], "erro": None},
+        {
+            "esperado": {"autoridade": True, "orcamento": False},
+            "divergencias": [{"campo": "autoridade", "esperado": True, "devolvido": False}],
+            "erro": None,
+        },
+    ]
+
+    t = taxa_por_campo(resultados)
+
+    assert t["autoridade"] == {"certos": 1, "total": 2, "taxa": 0.5}
+    assert t["orcamento"]["total"] == 1, "só o segundo caso cobra orcamento"
+
+
+def test_taxa_por_campo_cobra_resumo_em_todo_caso():
+    resultados = [
+        {"esperado": {"autoridade": True}, "divergencias": [], "erro": None},
+        {
+            "esperado": {"autoridade": True},
+            "divergencias": [{"campo": "resumo", "esperado": "x", "devolvido": "y"}],
+            "erro": None,
+        },
+    ]
+
+    t = taxa_por_campo(resultados)
+
+    assert t["resumo"]["total"] == 2, "resumo é cobrado sempre, não só quando declarado"
+    assert t["resumo"]["certos"] == 1
+
+
+def test_taxa_por_campo_ignora_caso_que_deu_erro():
+    """Falha de rede não é erro de classificação — contaria como acerto ou erro falso."""
+    resultados = [
+        {"esperado": {"autoridade": True}, "divergencias": [], "erro": "falha: caiu"},
+    ]
+
+    assert taxa_por_campo(resultados) == {}
