@@ -19,7 +19,9 @@ from evals.comparar import (
     MAX_PALAVRAS_RESUMO,
     checar_resumo,
     comparar,
+    impressao_da_instrucao,
     resumir,
+    resumo_auditavel,
     taxa_por_campo,
     taxa_por_fronteira,
 )
@@ -237,3 +239,43 @@ def test_fronteira_sem_caso_de_atrito_devolve_grupo_vazio():
     resultados = [{"esperado": {"autoridade": True}, "divergencias": [], "erro": None}]
 
     assert taxa_por_fronteira(resultados)["atrito"] == {}
+
+
+# ---- registro auditavel ----
+def test_impressao_muda_quando_a_instrucao_muda():
+    """Os números ficam amarrados ao texto que os produziu, não ao commit."""
+    a = impressao_da_instrucao("regra A")
+    b = impressao_da_instrucao("regra A ")
+
+    assert a != b, "um espaço a mais já é outra instrução"
+    assert impressao_da_instrucao("regra A") == a, "mesmo texto, mesma impressão"
+
+
+def test_resumo_auditavel_guarda_o_que_precisa_pra_conferir():
+    resultados = [
+        {
+            "id": "x1",
+            "esperado": {"autoridade": True},
+            "divergencias": [{"campo": "autoridade", "esperado": True, "devolvido": False}],
+            "categoria": "gerente",
+            "erro": None,
+        },
+        {
+            "id": "x2",
+            "esperado": {"autoridade": True},
+            "atrito": True,
+            "divergencias": [],
+            "categoria": "gerente",
+            "erro": None,
+        },
+    ]
+
+    r = resumo_auditavel(resultados, "a instrução", "2026-07-31T00:00:00+00:00", "openai")
+
+    assert r["instrucao_sha"] == impressao_da_instrucao("a instrução")
+    assert r["casos"] == 2 and r["passaram"] == 1
+    assert r["atrito"]["autoridade"] == 1.0
+    assert r["demais"]["autoridade"] == 0.0
+    assert r["divergencias"] == [
+        {"id": "x1", "campo": "autoridade", "esperado": "True", "devolvido": "False"}
+    ]

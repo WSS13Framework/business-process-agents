@@ -8,6 +8,7 @@ Kept apart from the runner on purpose, so the "is this a regression" logic is
 itself unit-tested and runs in CI even when the live call cannot.
 """
 
+import hashlib
 import re
 from typing import Any
 
@@ -268,6 +269,56 @@ def taxa_por_fronteira(resultados: list[dict[str, Any]]) -> dict[str, dict[str, 
         grupos["atrito" if r.get("atrito") else "demais"].append(r)
 
     return {nome: taxa_por_campo(rs) for nome, rs in grupos.items()}
+
+
+def impressao_da_instrucao(instrucao: str) -> str:
+    """
+    Identidade do texto que produziu os números. Não é o commit — é o conteúdo.
+    The identity of the text that produced the numbers — content, not commit.
+
+    Amarrar a medição ao sha do git deixaria o registro mentir quando a
+    instrução muda sem commit. O hash do próprio texto é reproduzível por
+    qualquer um, sem git: mesma instrução, mesma impressão.
+    """
+    return hashlib.sha256(instrucao.encode("utf-8")).hexdigest()[:12]
+
+
+def resumo_auditavel(
+    resultados: list[dict[str, Any]], instrucao: str, quando: str, provedor: str
+) -> dict[str, Any]:
+    """
+    O registro que fica no repositório para a medição ser conferível depois.
+    The record kept in the repo so the measurement stays checkable later.
+
+    Sem isto, as taxas do portão vivem em /tmp e somem com a sessão — restaria
+    a palavra de quem reportou, que é exatamente o que este projeto não aceita.
+    Without this, the gate's rates live in /tmp and vanish with the session.
+    """
+    s = resumir(resultados)
+    fronteira = taxa_por_fronteira(resultados)
+
+    divergencias = sorted(
+        {
+            (r["id"], d["campo"], str(d["esperado"]), str(d["devolvido"]))
+            for r in resultados
+            for d in r["divergencias"]
+        }
+    )
+
+    return {
+        "quando": quando,
+        "provedor": provedor,
+        "instrucao_sha": impressao_da_instrucao(instrucao),
+        "casos": s["total"],
+        "passaram": s["passaram"],
+        "por_campo": {c: v["taxa"] for c, v in taxa_por_campo(resultados).items()},
+        "atrito": {c: v["taxa"] for c, v in fronteira["atrito"].items()},
+        "demais": {c: v["taxa"] for c, v in fronteira["demais"].items()},
+        "divergencias": [
+            {"id": i, "campo": c, "esperado": e, "devolvido": d}
+            for i, c, e, d in divergencias
+        ],
+    }
 
 
 def resumir(resultados: list[dict[str, Any]]) -> dict[str, Any]:

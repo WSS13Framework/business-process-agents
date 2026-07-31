@@ -16,11 +16,18 @@ import argparse
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from core.base_enricher import BaseEnricher, enriquecer
 from evals.casos import CASOS
-from evals.comparar import comparar, resumir, taxa_por_fronteira
+from evals.comparar import (
+    comparar,
+    resumir,
+    resumo_auditavel,
+    taxa_por_fronteira,
+)
 
 VERDE = "\033[32m"
 VERMELHO = "\033[31m"
@@ -91,6 +98,11 @@ def main() -> int:
     p.add_argument("--caso", help="roda só um caso, pelo id")
     p.add_argument("--paralelo", type=int, default=8, help="chamadas simultâneas")
     p.add_argument("--json", action="store_true", help="saída em JSON, pra script")
+    p.add_argument(
+        "--registrar",
+        action="store_true",
+        help="grava o resumo em evals/historico/ pra medição ficar conferível depois",
+    )
     args = p.parse_args()
 
     casos = CASOS
@@ -131,6 +143,21 @@ def main() -> int:
         print(f"campos que mais erraram : {s['por_campo']}")
     if s["por_categoria"]:
         print(f"categorias com falha    : {s['por_categoria']}")
+
+    if args.registrar:
+        from agents.lead_triage.signals import INSTRUCAO
+
+        agora = datetime.now(timezone.utc)
+        registro = resumo_auditavel(
+            resultados, INSTRUCAO, agora.isoformat(timespec="seconds"), args.provedor
+        )
+        destino = Path("evals/historico")
+        destino.mkdir(exist_ok=True)
+        nome = f"{agora:%Y%m%d-%H%M%S}-{registro['instrucao_sha']}.json"
+        (destino / nome).write_text(
+            json.dumps(registro, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        print(f"\nregistrado: evals/historico/{nome}")
 
     return 0 if s["falharam"] == 0 else 1
 
