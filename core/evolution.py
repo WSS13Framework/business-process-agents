@@ -23,10 +23,11 @@ interpretação. É assim que o formato de verdade aparece, em vez de eu adivinh
 Use `bruto()` on the first real call — it returns raw JSON, no interpretation.
 """
 
-import os
 from typing import Any
 
 import httpx
+
+from core import config
 
 TIMEOUT_SEGUNDOS = 15.0
 
@@ -41,18 +42,22 @@ class Evolution:
         instancia: str | None = None,
         transport: httpx.BaseTransport | None = None,
     ):
-        # Config vem do ambiente, igual às chaves de LLM: nada no código.
-        self._url: str = (url or os.environ.get("EVOLUTION_URL") or "").rstrip("/")
-        self._chave: str = chave or os.environ.get("EVOLUTION_API_KEY") or ""
-        self._instancia: str = instancia or os.environ.get("EVOLUTION_INSTANCE") or ""
+        # Config vem do ambiente por core.config, igual a todo o resto: nada no
+        # código, e um lugar só que sabe ler variável.
+        self._url: str = (url or config.ler("EVOLUTION_URL")).rstrip("/")
+        self._chave: str = chave or config.ler("EVOLUTION_API_KEY")
+        self._instancia: str = instancia or config.ler("EVOLUTION_INSTANCE")
         # Costura para teste, mesmo padrão do SiteEnricher.
         self._transport = transport
 
     def _cliente(self) -> httpx.Client:
-        if not self._url or not self._chave or not self._instancia:
-            raise ValueError(
-                "faltam EVOLUTION_URL, EVOLUTION_API_KEY ou EVOLUTION_INSTANCE"
-            )
+        # Reclama de tudo que falta de uma vez, e antes de abrir socket: erro de
+        # configuração não deve chegar disfarçado de erro de rede.
+        config.exigir(
+            EVOLUTION_URL=self._url,
+            EVOLUTION_API_KEY=self._chave,
+            EVOLUTION_INSTANCE=self._instancia,
+        )
         return httpx.Client(
             base_url=self._url,
             headers={"apikey": self._chave, "Content-Type": "application/json"},

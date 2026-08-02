@@ -57,6 +57,49 @@ environment on its own — which is why the client takes no argument.
 > Chave commitada em repositório público é revogada pela Anthropic em minutos
 > por varredura automática. Até lá, roda no seu crédito.
 
+## Banco de dados / Database
+
+**Sem `DATABASE_URL`, tudo funciona.** O estado vai para o SQLite (`memoria.db`),
+o CLI roda e a suíte passa. É o modo de quem clonou o repositório agora.
+Without `DATABASE_URL` everything works — state goes to SQLite.
+
+Com Postgres, o schema deixa de nascer sozinho e passa a ser das migrações:
+
+```bash
+export DATABASE_URL=postgresql://usuario:senha@localhost:5432/agentes
+alembic upgrade head          # aplica o que falta / applies what's missing
+alembic history               # o que existe / what exists
+alembic downgrade -1          # desfaz a última / undoes the last one
+```
+
+`MemoriaPostgres` **não cria tabela**: se ela não existir, é erro de deploy e
+tem que aparecer. Só o SQLite cria a sua inline, e isso é conveniência local —
+na divergência entre os dois, o Postgres é que está certo.
+
+### Rodar os testes de Postgres / Running the Postgres tests
+
+Eles pulam sem banco, com o motivo visível na saída do pytest. Para rodar:
+
+```bash
+export DATABASE_URL_TESTE=postgresql://usuario:senha@localhost:5432/agentes_teste
+pytest -k postgres -v
+```
+
+> **`DATABASE_URL_TESTE` precisa apontar para outro banco.** O preparo dos
+> testes dá `TRUNCATE` na tabela de leads. `core/config.py` recusa rodar se as
+> duas URLs forem iguais, mas a primeira linha de defesa é você preencher certo.
+> The test database MUST be a different one — the suite truncates it.
+
+### Backup
+
+`deploy/backup.sh` copia o estado, escolhendo o backend sozinho: `pg_dump`
+quando há `DATABASE_URL`, `sqlite3 .backup` quando não há. A cópia sai com modo
+`600` e **o script nunca apaga nada** — não há retenção, e apagar cópia antiga é
+decisão de quem opera, não de um cron.
+
+O diretório `backup/` inteiro é ignorado pelo git: um `pg_dump` traz nome,
+telefone e o que cada lead escreveu, em claro.
+
 ## Stack
 
 `Python` · `Claude API` · `n8n` · `PostgreSQL` · vector store · structured logging

@@ -122,52 +122,76 @@ def test_acumular_nao_muta_o_estado_anterior():
     assert anterior["sinais"] == copia["sinais"], "função pura não mexe na entrada"
 
 
-# ---- as duas implementações do contrato se comportam igual ----
-def test_memoria_vazia_devolve_dicionario_vazio():
+# ---- o contrato: as TRÊS implementações se comportam igual ----
+# A fixture `memoria` (tests/conftest.py) roda cada teste abaixo uma vez por
+# implementação: em-memoria, sqlite e postgres. A que não puder rodar aparece
+# como SKIPPED com o motivo — nunca some em silêncio de dentro de um `for`.
+# Each test below runs once per implementation; a missing one shows as SKIPPED.
+def test_memoria_vazia_devolve_dicionario_vazio(memoria):
     """Lead novo não é erro — é a primeira mensagem de alguém."""
-    for m in (MemoriaEmMemoria(), MemoriaSQLite(":memory:")):
-        assert m.carregar("t1", "nunca-visto") == {}
+    assert memoria.carregar("t1", "nunca-visto") == {}
 
 
-def test_guarda_e_devolve(tmp_path: Path):
-    for m in (MemoriaEmMemoria(), MemoriaSQLite(tmp_path / "m.db")):
-        m.salvar("t1", "lead-1", {"mensagens": 2})
+def test_guarda_e_devolve(memoria):
+    memoria.salvar("t1", "lead-1", {"mensagens": 2})
 
-        assert m.carregar("t1", "lead-1") == {"mensagens": 2}
+    assert memoria.carregar("t1", "lead-1") == {"mensagens": 2}
 
 
-def test_tenant_separa_leads_de_mesmo_id(tmp_path: Path):
+def test_tenant_separa_leads_de_mesmo_id(memoria):
     """Chave errada é a migração mais cara que existe. O tenant entra desde já."""
-    for m in (MemoriaEmMemoria(), MemoriaSQLite(tmp_path / "t.db")):
-        m.salvar("cliente-a", "lead-1", {"mensagens": 9})
+    memoria.salvar("cliente-a", "lead-1", {"mensagens": 9})
 
-        assert m.carregar("cliente-b", "lead-1") == {}
-
-
-def test_salvar_duas_vezes_sobrescreve(tmp_path: Path):
-    for m in (MemoriaEmMemoria(), MemoriaSQLite(tmp_path / "s.db")):
-        m.salvar("t1", "lead-1", {"mensagens": 1})
-        m.salvar("t1", "lead-1", {"mensagens": 2})
-
-        assert m.carregar("t1", "lead-1")["mensagens"] == 2
+    assert memoria.carregar("cliente-b", "lead-1") == {}
 
 
+def test_salvar_duas_vezes_sobrescreve(memoria):
+    memoria.salvar("t1", "lead-1", {"mensagens": 1})
+    memoria.salvar("t1", "lead-1", {"mensagens": 2})
+
+    assert memoria.carregar("t1", "lead-1")["mensagens"] == 2
+
+
+def test_carregar_devolve_copia(memoria):
+    """
+    Mutar o que veio do carregar não pode alterar o guardado. No SQLite e no
+    Postgres sai de graça (a leitura desserializa um objeto novo); na
+    MemoriaEmMemoria precisa de cópia explícita. É contrato, não detalhe de uma.
+    """
+    memoria.salvar("t1", "lead-1", {"mensagens": 1})
+
+    carregado = memoria.carregar("t1", "lead-1")
+    carregado["mensagens"] = 99
+
+    assert memoria.carregar("t1", "lead-1")["mensagens"] == 1
+
+
+def test_estado_aninhado_sobrevive_a_ida_e_volta(memoria):
+    """
+    O estado real do lead é aninhado — `sinais`, `travado_em`, `agentes_vistos`
+    com lista de dicionário dentro. O JSONB do Postgres e o TEXT do SQLite
+    guardam isso por caminhos diferentes; o que volta tem que ser igual nos dois.
+    The real lead state is nested; both backends must round-trip it identically.
+    """
+    estado = {
+        "mensagens": 2,
+        "sinais": {"orcamento": True, "urgencia": False},
+        "travado_em": {"orcamento": T1},
+        "agentes_vistos": [{"agente": "comercial", "quando": T1}],
+        "visto_em": T2,
+    }
+    memoria.salvar("t1", "lead-1", estado)
+
+    assert memoria.carregar("t1", "lead-1") == estado
+
+
+# ---- comportamento de uma implementação só ----
 def test_sqlite_sobrevive_a_reabertura(tmp_path: Path):
     """O que a MemoriaEmMemoria não faz e o SQLite faz: sobreviver ao processo."""
     caminho = tmp_path / "persiste.db"
     MemoriaSQLite(caminho).salvar("t1", "lead-1", {"mensagens": 3})
 
     assert MemoriaSQLite(caminho).carregar("t1", "lead-1") == {"mensagens": 3}
-
-
-def test_carregar_devolve_copia():
-    m = MemoriaEmMemoria()
-    m.salvar("t1", "lead-1", {"mensagens": 1})
-
-    carregado = m.carregar("t1", "lead-1")
-    carregado["mensagens"] = 99
-
-    assert m.carregar("t1", "lead-1")["mensagens"] == 1
 
 
 # ---- o agente ponta a ponta: o lead que volta ----
